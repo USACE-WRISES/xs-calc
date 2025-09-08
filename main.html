@@ -33,6 +33,17 @@
     input,select,button{padding:10px;border:1px solid var(--border);border-radius:10px;font:inherit;background:#fff;}
     input,select{width:100%;}
     input:disabled, select:disabled { background:#f5f5f5; color:#888; }
+    /* Accordion + small checkbox */
+    details.acc{border:1px solid #e7e7e7;border-radius:10px;padding:8px 10px;background:#fff}
+    details.acc+details.acc{margin-top:10px}
+    details.acc>summary{cursor:pointer;list-style:none;user-select:none;font-weight:700;color:#333;margin:2px 0 8px;display:flex;align-items:center}
+    details.acc>summary::-webkit-details-marker{display:none}
+    /* Accordion caret */
+    details.acc>summary::before{content:'\25B8'; /* ▸ */ display:inline-block; margin-right:6px; transition:transform .12s ease}
+    details.acc[open]>summary::before{transform:rotate(90deg)}
+    /* Unit tags */
+    .unit-len{color:#666}
+    .chk-sm{transform:scale(0.95); transform-origin:left center}
     .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
     .actions-xs{margin:4px 0 10px;}
     button{background:#fff;cursor:pointer;}
@@ -189,6 +200,7 @@
     <div class="tabs" role="tablist" aria-label="Settings Tabs">
       <div class="tab active" data-tab="setup" role="tab" aria-selected="true" tabindex="0">Setup</div>
       <div class="tab" data-tab="hcs" role="tab" aria-selected="false" tabindex="0">Hydraulic Controls &amp; Structures</div>
+      <div class="tab" data-tab="designer" role="tab" aria-selected="false" tabindex="0">Designer</div>
     </div>
 
     <!-- Setup Panel -->
@@ -200,7 +212,7 @@
             <option value="SI">SI (m, s)</option>
           </select>
         </label>
-        <label>Bed/Energy slope, S
+        <label><span class="labelTitle">Bed/Energy Slope <span class="unit-len unit-slope">(ft/ft)</span></span>
           <input id="slope" type="number" step="0.001" value="0.001">
         </label>
         <label>LOB n
@@ -212,10 +224,10 @@
         <label>ROB n
           <input id="nROB" type="number" step="0.001" value="0.100">
         </label>
-        <label><span class="labelTitle">Flow Depth, D</span>
+        <label><span class="labelTitle">Flow Depth <span class="unit-len">(ft)</span></span>
           <input id="depth" type="number" step="any" value="2.5">
         </label>
-        <label>Discharge
+        <label><span class="labelTitle">Discharge <span class="unit-q unit-len">(ft³/s)</span></span>
           <input id="discharge" type="number" step="any" value="0" disabled>
         </label>
         <label>
@@ -314,6 +326,163 @@
         </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Designer Panel -->
+    <div id="tab-designer" class="tabPanel">
+      <div class="controls" style="margin-bottom:8px;">
+        <label>
+          <span class="labelTitle">Update XS Data</span>
+          <input id="designerAutoApply" class="chk-sm" type="checkbox">
+        </label>
+        <label>
+          Number of Stages
+          <select id="des-numStages">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+        </label>
+      </div>
+
+      <details class="acc" open>
+        <summary>Stage 1 (Bankfull/Channel)</summary>
+        <div class="controls">
+          <label><span class="labelTitle">Width <span class="unit-len">(ft)</span></span>
+            <input id="des-s1-Width" type="number" step="any" value="20">
+          </label>
+          <label><span class="labelTitle">Depth <span class="unit-len">(ft)</span></span>
+            <input id="des-s1-Depth" type="number" step="any" value="2">
+          </label>
+          <label>Side Slope, m:1
+            <input id="des-s1-mbanks" type="number" step="any" value="2">
+          </label>
+          <label>Bed Slope, ybed
+            <input id="des-s1-ybed" type="number" step="any" value="0.5">
+          </label>
+          <label><span class="labelTitle">Thalweg Shift (+R/−L) <span class="unit-len">(ft)</span></span>
+            <input id="des-s1-thalweg_shift" type="number" step="any" value="0">
+          </label>
+          <label><span class="labelTitle">Tie‑out L <span class="unit-len">(ft)</span></span>
+            <input id="des-s1-Mtieout_L" type="number" step="any" value="3">
+          </label>
+          <label><span class="labelTitle">Tie‑out R <span class="unit-len">(ft)</span></span>
+            <input id="des-s1-Mtieout_R" type="number" step="any" value="3">
+          </label>
+          <label>Roundness (0–1)
+            <input id="des-s1-Roundness" type="number" min="0" max="1" step="any" value="0">
+          </label>
+        </div>
+      </details>
+
+      <details class="acc">
+        <summary>Stage 2 (Benches)</summary>
+        <div class="controls">
+          <label><span class="labelTitle">ΔDepth <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-D2stg" type="number" step="any" value="2">
+          </label>
+          <label>Side Slope, m:1
+            <input id="des-s2-Mbanks_2stg" type="number" step="any" value="2">
+          </label>
+          <label><span class="labelTitle">Bench L Width <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-Wbench_L" type="number" step="any" value="10">
+          </label>
+          <label><span class="labelTitle">Bench R Width <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-Wbench_R" type="number" step="any" value="10">
+          </label>
+          <label><span class="labelTitle">Bench L y <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-Ybench_L" type="number" step="any" value="0.2">
+          </label>
+          <label><span class="labelTitle">Bench R y <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-Ybench_R" type="number" step="any" value="0.2">
+          </label>
+          <label><span class="labelTitle">Tie‑out 2nd L <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-Mtieout_2stg_L" type="number" step="any" value="3">
+          </label>
+          <label><span class="labelTitle">Tie‑out 2nd R <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-Mtieout_2stg_R" type="number" step="any" value="3">
+          </label>
+        </div>
+      </details>
+
+      <details class="acc">
+        <summary>Stage 3 (Floodplain)</summary>
+        <div class="controls">
+          <label><span class="labelTitle">ΔDepth <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-D3stg" type="number" step="any" value="0.5">
+          </label>
+          <label>Side Slope, m:1
+            <input id="des-s3-Mbanks_3stg" type="number" step="any" value="2">
+          </label>
+          <label><span class="labelTitle">Stage 3 L Width <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-W3rdstage_L" type="number" step="any" value="10">
+          </label>
+          <label><span class="labelTitle">Stage 3 R Width <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-W3rdstage_R" type="number" step="any" value="10">
+          </label>
+          <label><span class="labelTitle">Stage 3 L y <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-y3rdStage_L" type="number" step="any" value="0.2">
+          </label>
+          <label><span class="labelTitle">Stage 3 R y <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-y3rdStage_R" type="number" step="any" value="0.2">
+          </label>
+          <label><span class="labelTitle">Tie‑out 3rd L <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-Mtieout_3stg_L" type="number" step="any" value="3">
+          </label>
+          <label><span class="labelTitle">Tie‑out 3rd R <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-Mtieout_3stg_R" type="number" step="any" value="3">
+          </label>
+        </div>
+      </details>
+
+      <details class="acc">
+        <summary>Inner Berm</summary>
+        <div class="controls">
+          <label><span class="labelTitle">Inner Berm Enabled</span>
+            <input id="des-isInnerBerm" class="chk-sm" type="checkbox">
+          </label>
+          <label><span class="labelTitle">WIB <span class="unit-len">(ft)</span></span>
+            <input id="des-ib-WIB" type="number" step="any" value="1">
+          </label>
+          <label><span class="labelTitle">DmaxIB <span class="unit-len">(ft)</span></span>
+            <input id="des-ib-DmaxIB" type="number" step="any" value="0.5">
+          </label>
+        </div>
+      </details>
+
+      <details class="acc">
+        <summary>Advanced</summary>
+        <div class="controls">
+          <label>Left BKF H Mult
+            <input id="des-adv-Left_BKF_Height_Multiplier" type="number" step="any" value="1">
+          </label>
+          <label>Right BKF H Mult
+            <input id="des-adv-Right_BKF_Height_Multiplier" type="number" step="any" value="1">
+          </label>
+          <label>Left m@BKF Mult
+            <input id="des-adv-Left_Mbanks_BKF_Multiplier" type="number" step="any" value="1">
+          </label>
+          <label>Right m@BKF Mult
+            <input id="des-adv-Right_Mbanks_BKF_Multiplier" type="number" step="any" value="1">
+          </label>
+          <label>Left BKF bottom y Mult
+            <input id="des-adv-Left_BKF_Bottom_Slope_Multiplier" type="number" step="any" value="1">
+          </label>
+          <label>Right BKF bottom y Mult
+            <input id="des-adv-Right_BKF_Bottom_Slope_Multiplier" type="number" step="any" value="1">
+          </label>
+          <label><span class="labelTitle">X datum <span class="unit-len">(ft)</span></span>
+            <input id="des-adv-X_datum" type="number" step="any" value="0">
+          </label>
+          <label><span class="labelTitle">Y datum <span class="unit-len">(ft)</span></span>
+            <input id="des-adv-Y_datum" type="number" step="any" value="0">
+          </label>
+        </div>
+      </details>
+
+      <div class="actions" style="margin-top:10px;">
+        <button id="designerApply">Apply</button>
+      </div>
     </div>
   </div>
 
@@ -460,6 +629,7 @@
   </div>
 </div>
 
+<script src="designer.js"></script>
 <script>
 /* ===================== n CATALOG (complete) ===================== */
 const N_CATALOG = [
@@ -1164,6 +1334,229 @@ document.querySelectorAll('.tab').forEach(tab=>{
     document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
   });
 });
+
+/* ===================== DESIGNER INTEGRATION ===================== */
+(function(){
+  const autoToggleId = 'designerAutoApply';
+  const applyBtnId = 'designerApply';
+
+  function nval(id){
+    const el = document.getElementById(id);
+    if(!el) return null;
+    const v = parseFloat(el.value);
+    return Number.isFinite(v) ? v : null;
+  }
+  function bool(id){
+    const el = document.getElementById(id);
+    return !!(el && el.checked);
+  }
+  function intval(id, def){
+    const el = document.getElementById(id);
+    if(!el) return def;
+    const v = parseInt(el.value,10);
+    return Number.isFinite(v) ? v : def;
+  }
+  function setDisabled(ids, dis){ ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled = !!dis; }); }
+
+  function setDesignerEnableStates(){
+    const nStages = intval('des-numStages', 1);
+    const ibOn = bool('des-isInnerBerm');
+    // Stage 2
+    const s2 = [
+      'des-s2-D2stg','des-s2-Mbanks_2stg','des-s2-Wbench_L','des-s2-Wbench_R',
+      'des-s2-Ybench_L','des-s2-Ybench_R','des-s2-Mtieout_2stg_L','des-s2-Mtieout_2stg_R'
+    ];
+    // Stage 3
+    const s3 = [
+      'des-s3-D3stg','des-s3-Mbanks_3stg','des-s3-W3rdstage_L','des-s3-W3rdstage_R',
+      'des-s3-y3rdStage_L','des-s3-y3rdStage_R','des-s3-Mtieout_3stg_L','des-s3-Mtieout_3stg_R'
+    ];
+    // Inner Berm
+    const ib = ['des-ib-WIB','des-ib-DmaxIB'];
+    setDisabled(s2, nStages<2);
+    setDisabled(s3, nStages<3);
+    setDisabled(ib, !ibOn);
+  }
+
+  function getDesignerParamsFromUI(){
+    return {
+      numStages: intval('des-numStages', 1),
+      unitSystem: (document.getElementById('units')?.value || 'US'),
+      isInnerBerm: bool('des-isInnerBerm'),
+      stage1: {
+        Width: nval('des-s1-Width'),
+        Depth: nval('des-s1-Depth'),
+        mbanks: nval('des-s1-mbanks'),
+        ybed: nval('des-s1-ybed'),
+        thalweg_shift: nval('des-s1-thalweg_shift'),
+        Mtieout_L: nval('des-s1-Mtieout_L'),
+        Mtieout_R: nval('des-s1-Mtieout_R'),
+        Roundness: nval('des-s1-Roundness')
+      },
+      stage2: {
+        D2stg: nval('des-s2-D2stg'),
+        Mbanks_2stg: nval('des-s2-Mbanks_2stg'),
+        Wbench_L: nval('des-s2-Wbench_L'),
+        Wbench_R: nval('des-s2-Wbench_R'),
+        Ybench_L: nval('des-s2-Ybench_L'),
+        Ybench_R: nval('des-s2-Ybench_R'),
+        Mtieout_2stg_L: nval('des-s2-Mtieout_2stg_L'),
+        Mtieout_2stg_R: nval('des-s2-Mtieout_2stg_R')
+      },
+      stage3: {
+        D3stg: nval('des-s3-D3stg'),
+        Mbanks_3stg: nval('des-s3-Mbanks_3stg'),
+        W3rdstage_L: nval('des-s3-W3rdstage_L'),
+        W3rdstage_R: nval('des-s3-W3rdstage_R'),
+        y3rdStage_L: nval('des-s3-y3rdStage_L'),
+        y3rdStage_R: nval('des-s3-y3rdStage_R'),
+        Mtieout_3stg_L: nval('des-s3-Mtieout_3stg_L'),
+        Mtieout_3stg_R: nval('des-s3-Mtieout_3stg_R')
+      },
+      innerBerm: {
+        WIB: nval('des-ib-WIB'),
+        DmaxIB: nval('des-ib-DmaxIB')
+      },
+      advanced: {
+        Left_BKF_Height_Multiplier: nval('des-adv-Left_BKF_Height_Multiplier'),
+        Right_BKF_Height_Multiplier: nval('des-adv-Right_BKF_Height_Multiplier'),
+        Left_Mbanks_BKF_Multiplier: nval('des-adv-Left_Mbanks_BKF_Multiplier'),
+        Right_Mbanks_BKF_Multiplier: nval('des-adv-Right_Mbanks_BKF_Multiplier'),
+        Left_BKF_Bottom_Slope_Multiplier: nval('des-adv-Left_BKF_Bottom_Slope_Multiplier'),
+        Right_BKF_Bottom_Slope_Multiplier: nval('des-adv-Right_BKF_Bottom_Slope_Multiplier'),
+        X_datum: nval('des-adv-X_datum'),
+        Y_datum: nval('des-adv-Y_datum')
+      }
+    };
+  }
+
+  function fmt3(x){ return Number.isFinite(+x) ? (+x).toFixed(3) : ''; }
+
+  function applyDesignerRowsToXsTable(rows){
+    try{
+      if(!Array.isArray(rows) || !rows.length) return;
+      const tbody = document.querySelector('#xsTable tbody');
+      if(!tbody) return;
+      tbody.innerHTML='';
+      for(const r of rows){
+        const st = (r && typeof r.station!== 'undefined') ? r.station : null;
+        const el = (r && typeof r.elevation!== 'undefined') ? r.elevation : null;
+        // Map point names to stage tags for our table: L5 => LB, R5 => RB
+        let tag = '';
+        if(r && typeof r.name === 'string'){
+          if(r.name === 'L5') tag = 'LB';
+          else if(r.name === 'R5') tag = 'RB';
+        }
+        addRow(fmt3(st), fmt3(el), tag, '');
+      }
+      ensureTrailingBlankRow();
+      clearCellSelection();
+      compute();
+      updateXsLockFromAutoToggle();
+    }catch(e){ /* silently ignore UI message; may log if needed */ }
+  }
+
+  function hasCalc(){ return typeof window.calculateCrossSection === 'function'; }
+
+  function runDesignerApply(){
+    if(!hasCalc()){
+      // Calculator not present; skip without UI message
+      return;
+    }
+    setDesignerEnableStates();
+    const params = getDesignerParamsFromUI();
+    try{
+      const rows = window.calculateCrossSection(params);
+      if(!Array.isArray(rows)) return;
+      applyDesignerRowsToXsTable(rows);
+    }catch(err){
+      // Swallow UI message; optional: console.warn('Designer apply error', err);
+    }
+  }
+
+  function maybeAuto(){
+    const auto = document.getElementById(autoToggleId);
+    if(auto && auto.checked) runDesignerApply();
+  }
+
+  function wireDesigner(){
+    setDesignerEnableStates();
+    // Keep unit labels in sync with Setup -> Unit system
+    function updateUnitTags(){
+      const sys = document.getElementById('units')?.value || 'US';
+      const len = sys === 'SI' ? '(m)' : '(ft)';
+      const slope = sys === 'SI' ? '(m/m)' : '(ft/ft)';
+      const q = sys === 'SI' ? '(m³/s)' : '(ft³/s)';
+      document.querySelectorAll('.unit-len').forEach(el=>{ el.textContent = len; });
+      document.querySelectorAll('.unit-slope').forEach(el=>{ el.textContent = slope; });
+      document.querySelectorAll('.unit-q').forEach(el=>{ el.textContent = q; });
+    }
+    updateUnitTags();
+    const unitsSel = document.getElementById('units');
+    if(unitsSel){ unitsSel.addEventListener('change', updateUnitTags); }
+    const applyBtn = document.getElementById(applyBtnId);
+    if(applyBtn){
+      applyBtn.addEventListener('click', (e)=>{
+        e.currentTarget.classList.add('clicked');
+        setTimeout(()=>e.currentTarget.classList.remove('clicked'),160);
+        runDesignerApply();
+      });
+    }
+    const auto = document.getElementById(autoToggleId);
+    if(auto){
+      auto.addEventListener('change', ()=>{
+        updateXsLockFromAutoToggle();
+        if(auto.checked) runDesignerApply();
+      });
+    }
+    // Recompute on any change within the Designer panel
+    const panel = document.getElementById('tab-designer');
+    if(panel){
+      panel.querySelectorAll('input,select').forEach(el=>{
+        el.addEventListener('input', ()=>{ setDesignerEnableStates(); maybeAuto(); });
+        el.addEventListener('change', ()=>{ setDesignerEnableStates(); maybeAuto(); });
+      });
+    }
+    // Locking reacts to HVn changes
+    const hvn = document.getElementById('hvnToggle');
+    if(hvn){ hvn.addEventListener('change', updateXsLockFromAutoToggle); }
+
+    // No status message
+    // Initial lock state sync
+    updateXsLockFromAutoToggle();
+  }
+
+  // Wire up after DOM is parsed
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireDesigner);
+  else wireDesigner();
+})();
+
+// Table lock/unlock when Designer auto-apply is ON
+function updateXsLockFromAutoToggle(){
+  const auto = document.getElementById('designerAutoApply');
+  const lock = !!(auto && auto.checked);
+  const hvnOn = !!document.getElementById('hvnToggle')?.checked;
+  const tbody = document.querySelector('#xsTable tbody');
+  if(tbody){
+    tbody.querySelectorAll('tr').forEach(tr=>{
+      const st = tr.querySelector('input.station');
+      const el = tr.querySelector('input.elevation');
+      const tg = tr.querySelector('select.stagetag');
+      const nv = tr.querySelector('input.nval');
+      if(st) st.disabled = lock;
+      if(el) el.disabled = lock;
+      if(tg) tg.disabled = lock;
+      if(nv) nv.disabled = !hvnOn; // enable only when Horizontal Variation of n is ON
+    });
+  }
+  // Disable table action buttons under lock
+  const ins = document.getElementById('insertRow');
+  const del = document.getElementById('deleteSelected');
+  const srt = document.getElementById('sortBtn');
+  if(ins) ins.disabled = lock;
+  if(del) del.disabled = lock;
+  if(srt) srt.disabled = lock;
+}
 
 /* ===================== GEOMETRY & HYDRAULICS ===================== */
 /* (The hydraulics engine below is unchanged except for cosmetic plotting tweaks) */
