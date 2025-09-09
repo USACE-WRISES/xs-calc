@@ -151,9 +151,10 @@
     .tbl-lev colgroup col.c-en{width:16%;}
     .tbl-lev colgroup col.c-sta{width:33%;}
     .tbl-lev colgroup col.c-crest{width:33%;}
-    /* n-picker modal */
+    /* n-picker + USGS modal */
     .modalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:9999;overscroll-behavior:contain}
     .modal{width:min(980px,94vw);max-height:88vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.28);padding:16px;display:grid;gap:8px;overscroll-behavior:contain}
+    .modal.modal-lg{width:min(1180px,96vw);max-height:90vh;}
     .modal header{display:flex;align-items:center;justify-content:space-between;padding:0;border-bottom:none}
     .modal h3{margin:0;font-size:1.05rem}
     .modal .rightBtns{margin-left:auto;display:flex;gap:8px;align-items:center}
@@ -184,6 +185,8 @@
     .searchRow{display:flex;justify-content:center}
     .searchRow input{width:min(520px,85vw)}
     #nPickerMsg{ text-align:center;color:#b33;margin-top:6px;}
+    /* Embedding USGS page */
+    #usgsFrame{width:100%;height:78vh;border:none;border-radius:10px;background:#fff}
   </style>
 </head>
 <body>
@@ -212,7 +215,7 @@
             <option value="SI">SI (m, s)</option>
           </select>
         </label>
-        <label><span class="labelTitle">Bed/Energy Slope <span class="unit-len unit-slope">(ft/ft)</span></span>
+        <label><span class="labelTitle">Bed/Energy Slope <span class="unit-slope">(ft/ft)</span></span>
           <input id="slope" type="number" step="0.001" value="0.001">
         </label>
         <label>LOB n
@@ -489,7 +492,10 @@
   <div class="grid2">
     <!-- CROSS‑SECTION -->
     <div class="card">
-      <h2>Cross‑Section Data</h2>
+      <div class="cardHdr">
+        <h2>Cross‑Section Data</h2>
+        <button id="open3DEP" class="btnSecondary" title="Import a USGS 3DEP profile">Import 3DEP</button>
+      </div>
       <p class="small">
         Stations increase left→right. Flow depth is from the lowest bed elevation (thalweg).
         Mark exactly one <strong>LB</strong> and one <strong>RB</strong> row to split into
@@ -626,6 +632,14 @@
     </div>
     <div id="nCardGrid" class="quickGrid"></div>
     <div class="small" id="nPickerMsg"></div>
+  </div>
+</div>
+
+<!-- USGS (3DEP) Import Modal -->
+<div id="usgsModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="usgsTitle">
+  <div class="modal modal-lg" style="padding:0;display:block;">
+    <!-- We keep the modal chrome minimal; usgs.html supplies its own toolbar including Import/Close -->
+    <iframe id="usgsFrame" title="USGS 3DEP Import" src="about:blank"></iframe>
   </div>
 </div>
 
@@ -2968,7 +2982,6 @@ function resetExample(){
   updateSliceOptionStates();
   compute();
 }
-
 /* ===================== INIT ===================== */
 function init(){
   fillSliceSelect(document.getElementById('N_LOB'),1);
@@ -2981,6 +2994,94 @@ function init(){
   harmonizeButtons();
 }
 init();
+
+/* ===================== USGS 3DEP MODAL INTEGRATION ===================== */
+
+/** Open the 3DEP popover unless Designer → Update XS Data is ON */
+(function wireUsgsImport(){
+  const openBtn = document.getElementById('open3DEP');
+  const modal = document.getElementById('usgsModal');
+  const frame = document.getElementById('usgsFrame');
+
+  function openModal(){
+    frame.src = 'usgs.html?embedded=1';
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
+  }
+  function closeModal(){
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    try{ frame.src = 'about:blank'; }catch(_){}
+  }
+
+  function unitsLabel(){ return (document.getElementById('units')?.value || 'US'); } // 'US' or 'SI'
+  function mToFt(x){ return x*3.280839895013123; }
+  function ftToM(x){ return x*0.3048; }
+  function round3(x){ return Number.isFinite(+x) ? (+x).toFixed(3) : ''; }
+
+  /** Replace XS table with imported samples; clear Stage and n */
+  function applySamples(samples, srcUnits){
+    if(!Array.isArray(samples) || !samples.length) return;
+    const want = unitsLabel(); // 'US' => ft, 'SI' => m
+    const fromFeet = (srcUnits === 'feet');
+    const fromMeters = !fromFeet; // default meters
+    const convert = (v)=>{
+      if(want==='US' && fromMeters) return mToFt(v);
+      if(want==='SI' && fromFeet ) return ftToM(v);
+      return v;
+    };
+    // wipe and refill
+    const tbody = document.querySelector('#xsTable tbody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    let n=0;
+    for(const s of samples){
+      const st = Number(s.station), el = Number(s.elevation);
+      if(!Number.isFinite(st) || !Number.isFinite(el)) continue;
+      addRow(round3(convert(st)), round3(convert(el)), '', ''); // Stage & n cleared
+      n++;
+    }
+    ensureTrailingBlankRow();
+    renumberIDs();
+    clearCellSelection();
+    compute();
+    const msgEl = document.getElementById('messages');
+    if(msgEl) msgEl.textContent = `Imported ${n} point(s) from USGS 3DEP. Mark LB and RB to compute.`;
+  }
+
+  // Open button
+  if(openBtn){
+    openBtn.addEventListener('click', (e)=>{
+      e.currentTarget.classList.add('clicked'); setTimeout(()=>e.currentTarget.classList.remove('clicked'),160);
+      const auto = document.getElementById('designerAutoApply');
+      if(auto && auto.checked){
+        alert('Turn off "Update XS Data" in the Designer tab before importing data from 3DEP.');
+        return;
+      }
+      openModal();
+    });
+  }
+
+  // Click outside iframe closes modal
+  if(modal){
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+  }
+
+  // Listen for messages from embedded usgs.html
+  window.addEventListener('message', (evt)=>{
+    const srcWin = frame?.contentWindow;
+    if(!srcWin || evt.source !== srcWin) return; // only accept from our iframe
+    const data = evt.data || {};
+    if(data.type === 'usgs-import'){
+      const samples = Array.isArray(data.samples) ? data.samples : [];
+      const srcUnits = (data.units === 'feet') ? 'feet' : 'meters';
+      applySamples(samples, srcUnits);
+      closeModal();
+    }else if(data.type === 'usgs-close-request'){
+      closeModal();
+    }
+  });
+})();
 </script>
 </body>
 </html>
