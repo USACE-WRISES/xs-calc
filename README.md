@@ -1,23 +1,23 @@
 # 1D Cross-Section Hydraulics Calculator
 
-A single-page web app that computes 1D open-channel hydraulics for a single cross-section using Manningís equation. Open `main.html` in a modern browser, build or import a cross-section, and the app computes discharge and other metrics (or, if you specify discharge, it solves for the stage/depth that conveys it).
+A single-page web app that computes 1D open-channel hydraulics for a single cross-section using Manning‚Äôs equation. Open `index.html` in a modern browser, build or import a cross-section, and the app computes discharge and other metrics (or, if you specify discharge, it solves for the stage/depth that conveys it).
 
 **Key Features**
 - **Units:** US (ft, s) or SI (m, s); `k=1.486` (US) or `k=1.0` (SI).
 - **Specify Mode:** Solve for Q from depth D, or enable `Specify Discharge` to solve for stage from Q.
-- **Cross-Section Editor:** StationñElevation table with LB/RB tags, insert/delete, sort, keyboard nav, and type-to-edit.
+- **Cross-Section Editor:** Station‚ÄìElevation table with LB/RB tags, insert/delete, sort, keyboard nav, and type-to-edit.
 - **Banks:** Mark exactly one Left Bank (LB) and one Right Bank (RB) to split into LOB, Channel, ROB.
 - **HVn (Horizontal Variation of n):** Turn on to assign n at stations; carry-forward n between breaks; channel uses composite n when multiple n values exist and either bank is steeper than ~5H:1V.
 - **n Picker:** Catalog with min/typ/max and search across categories.
 - **HCS (Hydraulic Controls & Structures):** Ineffective Flow Areas, Obstructions, Levees (with levee-based effective width clipping).
-- **Filter Tool:** Funnel icon lets you thin points (near/colinear filter or ìminimize area changeî) while preserving banks and endpoints.
+- **Filter Tool:** Funnel icon lets you thin points (near/colinear filter or ‚Äúminimize area change‚Äù) while preserving banks and endpoints.
 - **Results:** XS average and per-zone (LOB/Channel/ROB) metrics; distribution by slices; conveyance-by-n when HVn is ON.
 - **Plot:** Interactive XS with water fill, optional Velocity/Shear overlays (XS average or per-slice), n-segment strip, IFA/obstruction/levee graphics.
 - **Quality of Life:** Reset example, harmonized button widths, tooltips, and Help modal.
 
 **Three Common Workflows**
 - **(1) Analyze Existing Data (e.g., from Excel):**
-  - Open `main.html` and select units.
+  - Open `index.html` and select units.
   - In the Cross-Section table, enter (or paste into inputs) Station and Elevation for each point from left to right; the grid adds rows automatically.
   - Mark exactly one LB and one RB row.
   - Set slope `S`, choose either depth `D` (to compute `Q`) or enable `Specify Discharge` and enter `Q` (to solve for stage).
@@ -25,7 +25,7 @@ A single-page web app that computes 1D open-channel hydraulics for a single cros
   - Review Results, Conveyance, and Distribution; use the plot toggle for Velocity/Shear views.
 
 - **(2) Import from USGS 3DEP:**
-  - Click the `3DEP` button in the ìCross-Section Dataî header.
+  - Click the `3DEP` button in the ‚ÄúCross-Section Data‚Äù header.
   - In the 3DEP modal, choose a location/profile and import. Units convert automatically to your current unit system.
   - Back in the table, mark LB and RB (required), then proceed as above with slope, D or Q, and n options.
 
@@ -49,11 +49,18 @@ A single-page web app that computes 1D open-channel hydraulics for a single cros
 - **Plot:** Water surface, bed, banks, n labels, IFA/Obstruction fills, levee markers; optional Velocity/Shear (XS-average or per-slice) on secondary axes.
 
 **Notes**
-- **Equations:** `K = (k/n) ∑ A ∑ R^(2/3)`, `Q = K ∑ vS`. Unit weights/acceleration handled per unit system.
+- **Equations:** `K = (k/n) ¬∑ A ¬∑ R^(2/3)`, `Q = K ¬∑ vS`. Unit weights/acceleration handled per unit system.
 - **Slices:** Total slices across LOB/Channel/ROB are capped at 45 (for parity with common practice).
 - **Help:** The `?` button in-app gives a concise overview and formulas.
 
 **Files**
-- `main.html`: App UI + core logic.
+- `index.html`: App UI markup and styles; includes external scripts only.
+- `app.core.js`: Core computational helpers (geometry, hydraulics) with no DOM access.
+- `app.ui.js`: UI wiring and rendering (moved from inline script).
+- `designer.js`: Parametric cross-section generator used by the Designer tab.
+- `filter.html`, `filter_logic.js`: Embedded filter tool for thinning cross-section points.
+- `usgs.html`, `app.js`: USGS 3DEP profile tool (standalone or embedded).
+
+- `index.html`: App UI + core logic.
 - `designer.js`: Parametric cross-section generator used by the Designer tab.
 - `filter.html`, `filter_logic.js`: Embedded filter tool for thinning cross-section points.
