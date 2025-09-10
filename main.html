@@ -20,6 +20,10 @@
     .cardHdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
     .helpBtn{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:1px solid #cfcfcf;background:#fff;color:#333;font-weight:600;cursor:pointer;}
     .helpBtn.clicked{animation:btnflash 180ms ease-out}
+
+    /* NEW: small icon-only button (for Filter) */
+    .iconBtn{width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:10px}
+    .iconBtn svg{width:18px;height:18px;display:block}
     /* Tabs */
     .tabs{display:flex;gap:16px;border-bottom:1px solid #e6e6e6;margin:4px 0 10px;}
     .tab{padding:8px 2px;cursor:pointer;color:#444;position:relative;font-weight:500;}
@@ -68,15 +72,20 @@
     .segSwitch label{padding:6px 10px;cursor:pointer;user-select:none;border-right:1px solid #e6e6e6;white-space:nowrap;font-size:.95rem}
     .segSwitch label:last-of-type{border-right:none}
     .segSwitch input:checked+label{background:#e9f0ff;color:#0b3d91}
+
+    /* NEW: bank tools */
+    .bankTools{display:flex;align-items:center;gap:14px}
+    .bankGroup{display:flex;align-items:center;gap:6px}
+    .btnTiny{padding:4px 8px;border-radius:999px;font-size:.9rem;line-height:1}
+    .bankToggle{padding:6px 12px;border-radius:999px;border:1px solid #cfcfcf;background:#fff;font-weight:600}
+    .bankToggle.active{background:#e9f0ff;color:#0b3d91;border-color:#b9ccff}
     /* Tables */
     table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
-    /* Remove focus ring from the cross-section table when programmatically focused */
     #xsTable:focus, #xsTable:focus-visible{outline:none; box-shadow:none}
     th,td{padding:6px 8px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
     th:last-child,td:last-child{border-right:none}
     th{text-align:left;color:#666;font-weight:600}
     td{text-align:left;background:#fff;user-select:none}
-    /* XS table widths */
     #xsTable th:nth-child(1),#xsTable td.cell-id{width:28px}
     #xsTable th:nth-child(2),#xsTable td.cell-station{width:60px}
     #xsTable th:nth-child(3),#xsTable td.cell-elev{width:60px}
@@ -108,16 +117,12 @@
     .axis-label{font-size:24px;fill:#222}
     .point{stroke:#222;fill:#222}
     .point.bank{stroke:#d32f2f;fill:#d32f2f}
-    /* n labels (plot) */
     .nlabel { font-size:18px; fill:#333; }
-    /* Profiles */
     .prof-vel{stroke:#b71c1c;stroke-width:2;fill:none;vector-effect:non-scaling-stroke}
     .prof-tau{stroke:#6f42c1;stroke-width:2;fill:none;vector-effect:non-scaling-stroke}
-    /* Secondary axes */
     .secondary-axis{stroke:#333;stroke-width:1.5;vector-effect:non-scaling-stroke}
     .secondary-tick{stroke-width:2;vector-effect:non-scaling-stroke}
     .secondary-label{font-size:16px}
-    /* Slice boundaries + tables */
     .slice-boundary{stroke:#777;stroke-width:1;stroke-dasharray:3 7;opacity:.55;vector-effect:non-scaling-stroke}
     .summary,.dist{width:100%;border-collapse:collapse;margin-top:4px;background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden}
     .dist{table-layout:fixed}
@@ -126,11 +131,9 @@
     .dist th:first-child,.dist td:first-child{text-align:left;color:#444;white-space:nowrap}
     .dist tfoot td{font-weight:600;background:#fafafa}
     .disabled{opacity:.45;filter:grayscale(.6)}
-    /* Summary widths */
     .summary{table-layout:auto}
     .summary th:first-child{min-width:220px;white-space:nowrap}
     .summary th:nth-child(2),.summary td:nth-child(2){min-width:130px;white-space:nowrap}
-    /* HCS small tables */
     .subhdr{display:flex;align-items:center;gap:8px;margin:12px 0 6px;}
     .subhdr h4{margin:0;font-weight:500;color:#222;}
     .btnAdd{padding:4px 10px;border-radius:999px;border:1px solid #cfcfcf;font-size:.9rem;}
@@ -151,7 +154,6 @@
     .tbl-lev colgroup col.c-en{width:16%;}
     .tbl-lev colgroup col.c-sta{width:33%;}
     .tbl-lev colgroup col.c-crest{width:33%;}
-    /* n-picker + USGS modal */
     .modalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:9999;overscroll-behavior:contain}
     .modal{width:min(980px,94vw);max-height:88vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.28);padding:16px;display:grid;gap:8px;overscroll-behavior:contain}
     .modal.modal-lg{width:min(1180px,96vw);max-height:90vh;}
@@ -185,8 +187,15 @@
     .searchRow{display:flex;justify-content:center}
     .searchRow input{width:min(520px,85vw)}
     #nPickerMsg{ text-align:center;color:#b33;margin-top:6px;}
-    /* Embedding USGS page */
     #usgsFrame{width:100%;height:78vh;border:none;border-radius:10px;background:#fff}
+
+    .ico-funnel{display:inline-block;width:16px;height:16px;vertical-align:-3px;margin-right:6px;position:relative}
+    .ico-funnel:before{content:"";position:absolute;left:50%;transform:translateX(-50%);top:0;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:8px solid #333}
+    .ico-funnel:after{content:"";position:absolute;left:50%;transform:translateX(-50%);top:8px;width:8px;height:6px;background:#333;border-radius:1px}
+    .actions.actions-xs #openFilter{ display:none !important; }
+
+    /* NEW: Filter iframe */
+    #filterFrame{width:100%;height:84vh;border:none;border-radius:10px;background:#fff}
   </style>
 </head>
 <body>
@@ -494,7 +503,16 @@
     <div class="card">
       <div class="cardHdr">
         <h2>Cross‑Section Data</h2>
-        <button id="open3DEP" class="btnSecondary" title="Import a USGS 3DEP profile">Import 3DEP</button>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <!-- NEW: filter icon-only button (to the LEFT of 3DEP) -->
+          <button id="openFilter2" class="btnSecondary iconBtn" title="Filter cross-section points" aria-label="Filter points">
+            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+              <path d="M3 4h18l-7 9v5.5c0 .3-.1.6-.4.8l-3 2a1 1 0 0 1-1.6-.8V13L3 4z" fill="currentColor"/>
+            </svg>
+          </button>
+          <!-- Renamed: "3DEP" -->
+          <button id="open3DEP" class="btnSecondary" title="Import a USGS 3DEP profile">3DEP</button>
+        </div>
       </div>
       <p class="small">
         Stations increase left→right. Flow depth is from the lowest bed elevation (thalweg).
@@ -505,6 +523,10 @@
         <button id="insertRow">Insert Row</button>
         <button id="deleteSelected" class="harmonize">Delete Selected</button>
         <button id="sortBtn" class="harmonize" title="Sort stations ascending">Sort by Station</button>
+        <!-- Legacy Filter button kept in DOM but hidden via CSS -->
+        <button id="openFilter" class="btnSecondary" title="Filter cross‑section points">
+          <span class="ico-funnel" aria-hidden="true"></span>Filter
+        </button>
       </div>
       <table id="xsTable" tabindex="-1">
         <thead>
@@ -524,6 +546,18 @@
     <div class="card resultsWrap resultsCard">
       <div class="resultsHeader">
         <h2>Results</h2>
+        <div class="bankTools" role="group" aria-label="Bank tools">
+          <div class="bankGroup" aria-label="Left Bank controls">
+            <button id="lbLeft" class="btnSecondary btnTiny" title="Move LB to previous point" aria-label="Move LB left">◀</button>
+            <button id="setLB" class="bankToggle" aria-pressed="false" title="Click, then click on the plot to set Left Bank">LB</button>
+            <button id="lbRight" class="btnSecondary btnTiny" title="Move LB to next point" aria-label="Move LB right">▶</button>
+          </div>
+          <div class="bankGroup" aria-label="Right Bank controls">
+            <button id="rbLeft" class="btnSecondary btnTiny" title="Move RB to previous point" aria-label="Move RB left">◀</button>
+            <button id="setRB" class="bankToggle" aria-pressed="false" title="Click, then click on the plot to set Right Bank">RB</button>
+            <button id="rbRight" class="btnSecondary btnTiny" title="Move RB to next point" aria-label="Move RB right">▶</button>
+          </div>
+        </div>
         <div class="plotSwitch" title="Plot depth-averaged Velocity (V) and Shear (τ)">
           <div class="segSwitch" role="radiogroup" aria-label="Plot V, τ mode">
             <input id="pmOff" type="radio" name="plotMode" value="off" checked><label for="pmOff">Off</label>
@@ -638,8 +672,14 @@
 <!-- USGS (3DEP) Import Modal -->
 <div id="usgsModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="usgsTitle">
   <div class="modal modal-lg" style="padding:0;display:block;">
-    <!-- We keep the modal chrome minimal; usgs.html supplies its own toolbar including Import/Close -->
     <iframe id="usgsFrame" title="USGS 3DEP Import" src="about:blank"></iframe>
+  </div>
+</div>
+
+<!-- Filter Modal (loads filter.html inside an iframe) -->
+<div id="filterModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="filterTitle">
+  <div class="modal modal-lg" style="padding:0;display:block;">
+    <iframe id="filterFrame" title="Cross‑Section Point Filter" src="about:blank" style="width:100%;height:84vh;border:none;border-radius:10px;background:#fff"></iframe>
   </div>
 </div>
 
@@ -655,7 +695,6 @@ const N_CATALOG = [
   {id:'mc-more-stones', grp:'Main Channels', label:'Same as “lower stages”: more stones', n:{min:0.045,typ:0.050,max:0.060}},
   {id:'mc-sluggish-weedy', grp:'Main Channels', label:'Sluggish; weedy; deep pools', n:{min:0.050,typ:0.070,max:0.080}},
   {id:'mc-very-weedy-or-timber', grp:'Main Channels', label:'Very weedy; deep pools; or floodways with timber/brush', n:{min:0.070,typ:0.100,max:0.150}},
-
   {id:'fp-pasture-short', grp:'Floodplains', label:'Pasture (no brush): short grass', n:{min:0.025,typ:0.030,max:0.035}},
   {id:'fp-pasture-high', grp:'Floodplains', label:'Pasture (no brush): high grass', n:{min:0.030,typ:0.035,max:0.050}},
   {id:'fp-cultivated-none', grp:'Floodplains', label:'Cultivated: no crop', n:{min:0.020,typ:0.030,max:0.040}},
@@ -671,10 +710,8 @@ const N_CATALOG = [
   {id:'fp-trees-heavy-stand', grp:'Floodplains', label:'Trees: heavy stand; few down trees; little undergrowth; flow below branches', n:{min:0.080,typ:0.100,max:0.120}},
   {id:'fp-trees-flow-into-branches', grp:'Floodplains', label:'Trees: as above—flow into branches', n:{min:0.100,typ:0.120,max:0.160}},
   {id:'fp-dense-willows-summer', grp:'Floodplains', label:'Dense willows (summer; straight)', n:{min:0.110,typ:0.150,max:0.200}},
-
   {id:'ms-gravel-cobbles', grp:'Mountain Streams', label:'Bottom: gravels; cobbles; few boulders', n:{min:0.030,typ:0.040,max:0.050}},
   {id:'ms-cobbles-large-boulders', grp:'Mountain Streams', label:'Bottom: cobbles with large boulders', n:{min:0.040,typ:0.050,max:0.070}},
-
   {id:'ln-conc-trowel', grp:'Lined or Constructed Channels', label:'Concrete: trowel finish', n:{min:0.011,typ:0.013,max:0.015}},
   {id:'ln-conc-float', grp:'Lined or Constructed Channels', label:'Concrete: float finish', n:{min:0.013,typ:0.015,max:0.016}},
   {id:'ln-conc-gravel-bottom', grp:'Lined or Constructed Channels', label:'Concrete: finished; gravel bottom', n:{min:0.015,typ:0.017,max:0.020}},
@@ -698,7 +735,6 @@ const N_CATALOG = [
   {id:'ln-asphalt-smooth', grp:'Lined or Constructed Channels', label:'Asphalt: smooth', n:{min:0.013,typ:0.013,max:null}},
   {id:'ln-asphalt-rough', grp:'Lined or Constructed Channels', label:'Asphalt: rough', n:{min:0.016,typ:0.016,max:null}},
   {id:'ln-vegetal-lining', grp:'Lined or Constructed Channels', label:'Vegetal lining', n:{min:0.030,typ:0.030,max:0.500}},
-
   {id:'ex-earth-straight-clean-new', grp:'Excavated or Dredged Channels', label:'Earth: straight & uniform—clean; recently completed', n:{min:0.016,typ:0.018,max:0.020}},
   {id:'ex-earth-straight-weathered', grp:'Excavated or Dredged Channels', label:'Earth: straight & uniform—clean; after weathering', n:{min:0.018,typ:0.022,max:0.025}},
   {id:'ex-earth-straight-gravel', grp:'Excavated or Dredged Channels', label:'Earth: straight & uniform—gravel; uniform; clean', n:{min:0.022,typ:0.025,max:0.030}},
@@ -838,7 +874,6 @@ function getCellByRowCol(rowIdx, colIdx){
   return cols[colIdx];
 }
 function clearCellSelection(){
-  // Changing selection stops editing.
   stopEditingActiveInput();
   selectedCells.forEach(td=>td.classList.remove('cell-selected'));
   selectedCells.clear();
@@ -906,7 +941,7 @@ function stopEditingActiveInput(){
   if(active) active.blur();
 }
 
-// Ensure the grid (table) has focus so document-level key handlers work
+// Ensure the grid has focus so document-level key handlers work
 function focusGrid(){
   const t=document.getElementById('xsTable');
   if(t && typeof t.focus==='function'){
@@ -1017,18 +1052,15 @@ tableBody.addEventListener('focusin',(e)=>{
   }
 });
 
-/* ---- FIX: Enter while editing should blur & keep selection (no movement) ---- */
+/* FIX: Enter while editing should blur & keep selection */
 tableBody.addEventListener('keydown',(e)=>{
   if(e.key==='Enter' && e.target && e.target.tagName==='INPUT'){
-    e.preventDefault();            // do not submit / insert newline
-    e.stopPropagation();           // keep from reaching document handler
+    e.preventDefault(); e.stopPropagation();
     const td = e.target.closest('td');
     if(isEditableCell(td)){
-      if(!(selectedCells.size===1 && selectedCells.has(td))){
-        selectSingleCell(td);      // ensure the same cell stays selected
-      }
+      if(!(selectedCells.size===1 && selectedCells.has(td))){ selectSingleCell(td); }
     }
-    e.target.blur();               // stop editing
+    e.target.blur();
   }
 });
 
@@ -1074,24 +1106,20 @@ tableBody.addEventListener('keyup',(e)=>{
   if(t && (t.classList.contains('nval')||t.classList.contains('station')||t.classList.contains('elevation'))) compute();
 });
 
-/* ---- Keyboard (global) ---- */
+/* Keyboard (global) */
 document.addEventListener('keydown',(e)=>{
-  // If some inner handler already prevented default, do nothing
   if (e.defaultPrevented) return;
 
   const activeInput = getActiveEditingInput();
 
-  // Delete clears selected cells only when NOT editing
   if(e.key === 'Delete' && !activeInput && selectedCells.size>0){
     e.preventDefault();
     clearSelectedCells();
     return;
   }
 
-  // If editing, let normal typing/arrows work (Enter handled on input)
   if(activeInput){ return; }
 
-  // Arrow navigation from first selected cell (range or single)
   const dirMap = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right' };
   if(dirMap[e.key]){
     if(selectedCells.size>0){
@@ -1105,7 +1133,6 @@ document.addEventListener('keydown',(e)=>{
     return;
   }
 
-  // Enter when not editing: move to "next cell" (down)
   if(e.key === 'Enter'){
     if(selectedCells.size>0){
       e.preventDefault();
@@ -1119,16 +1146,14 @@ document.addEventListener('keydown',(e)=>{
     return;
   }
 
-  // ---- Backspace when not editing: start editing, delete last character ----
   if(e.key === 'Backspace'){
     if(selectedCells.size===1 && isEditableCell([...selectedCells][0])){
-      e.preventDefault(); // avoid navigating back
+      e.preventDefault();
       startEditingWithBackspace();
     }
     return;
   }
 
-  // Type-to-edit: when exactly one cell is selected and not editing
   if(selectedCells.size===1 && isEditableCell([...selectedCells][0]) && isPrintableNumeric(e)){
     e.preventDefault();
     startEditingWithChar(e.key);
@@ -1139,9 +1164,7 @@ document.addEventListener('keydown',(e)=>{
 document.addEventListener('mousedown',(e)=>{
   const inCells=e.target.closest('#xsTable td.cell-id, #xsTable td.cell-station, #xsTable td.cell-elev, #xsTable td.cell-n');
   const onToolbar=e.target.closest('.actions')||e.target.closest('.actions-xs');
-  if(!inCells && !onToolbar){
-    clearCellSelection();
-  }
+  if(!inCells && !onToolbar){ clearCellSelection(); }
 });
 
 /* Action buttons */
@@ -1375,17 +1398,14 @@ document.querySelectorAll('.tab').forEach(tab=>{
   function setDesignerEnableStates(){
     const nStages = intval('des-numStages', 1);
     const ibOn = bool('des-isInnerBerm');
-    // Stage 2
     const s2 = [
       'des-s2-D2stg','des-s2-Mbanks_2stg','des-s2-Wbench_L','des-s2-Wbench_R',
       'des-s2-Ybench_L','des-s2-Ybench_R','des-s2-Mtieout_2stg_L','des-s2-Mtieout_2stg_R'
     ];
-    // Stage 3
     const s3 = [
       'des-s3-D3stg','des-s3-Mbanks_3stg','des-s3-W3rdstage_L','des-s3-W3rdstage_R',
       'des-s3-y3rdStage_L','des-s3-y3rdStage_R','des-s3-Mtieout_3stg_L','des-s3-Mtieout_3stg_R'
     ];
-    // Inner Berm
     const ib = ['des-ib-WIB','des-ib-DmaxIB'];
     setDisabled(s2, nStages<2);
     setDisabled(s3, nStages<3);
@@ -1455,7 +1475,6 @@ document.querySelectorAll('.tab').forEach(tab=>{
       for(const r of rows){
         const st = (r && typeof r.station!== 'undefined') ? r.station : null;
         const el = (r && typeof r.elevation!== 'undefined') ? r.elevation : null;
-        // Map point names to stage tags for our table: L5 => LB, R5 => RB
         let tag = '';
         if(r && typeof r.name === 'string'){
           if(r.name === 'L5') tag = 'LB';
@@ -1467,40 +1486,34 @@ document.querySelectorAll('.tab').forEach(tab=>{
       clearCellSelection();
       compute();
       updateXsLockFromAutoToggle();
-    }catch(e){ /* silently ignore UI message; may log if needed */ }
+    }catch(e){ /* no-op */ }
   }
 
   function hasCalc(){ return typeof window.calculateCrossSection === 'function'; }
 
   function runDesignerApply(){
-    if(!hasCalc()){
-      // Calculator not present; skip without UI message
-      return;
-    }
+    if(!hasCalc()){ return; }
     setDesignerEnableStates();
     const params = getDesignerParamsFromUI();
     try{
       const rows = window.calculateCrossSection(params);
       if(!Array.isArray(rows)) return;
       applyDesignerRowsToXsTable(rows);
-    }catch(err){
-      // Swallow UI message; optional: console.warn('Designer apply error', err);
-    }
+    }catch(err){ /* no-op */ }
   }
 
   function maybeAuto(){
-    const auto = document.getElementById(autoToggleId);
+    const auto = document.getElementById('designerAutoApply');
     if(auto && auto.checked) runDesignerApply();
   }
 
   function wireDesigner(){
     setDesignerEnableStates();
-    // Keep unit labels in sync with Setup -> Unit system
     function updateUnitTags(){
       const sys = document.getElementById('units')?.value || 'US';
       const len = sys === 'SI' ? '(m)' : '(ft)';
       const slope = sys === 'SI' ? '(m/m)' : '(ft/ft)';
-      const q = sys === 'SI' ? '(m³/s)' : '(ft³/s)';
+      const q = sys === 'SI' ? ' (m³/s)' : ' (ft³/s)';
       document.querySelectorAll('.unit-len').forEach(el=>{ el.textContent = len; });
       document.querySelectorAll('.unit-slope').forEach(el=>{ el.textContent = slope; });
       document.querySelectorAll('.unit-q').forEach(el=>{ el.textContent = q; });
@@ -1508,7 +1521,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
     updateUnitTags();
     const unitsSel = document.getElementById('units');
     if(unitsSel){ unitsSel.addEventListener('change', updateUnitTags); }
-    const applyBtn = document.getElementById(applyBtnId);
+    const applyBtn = document.getElementById('designerApply');
     if(applyBtn){
       applyBtn.addEventListener('click', (e)=>{
         e.currentTarget.classList.add('clicked');
@@ -1516,14 +1529,13 @@ document.querySelectorAll('.tab').forEach(tab=>{
         runDesignerApply();
       });
     }
-    const auto = document.getElementById(autoToggleId);
+    const auto = document.getElementById('designerAutoApply');
     if(auto){
       auto.addEventListener('change', ()=>{
         updateXsLockFromAutoToggle();
         if(auto.checked) runDesignerApply();
       });
     }
-    // Recompute on any change within the Designer panel
     const panel = document.getElementById('tab-designer');
     if(panel){
       panel.querySelectorAll('input,select').forEach(el=>{
@@ -1531,21 +1543,15 @@ document.querySelectorAll('.tab').forEach(tab=>{
         el.addEventListener('change', ()=>{ setDesignerEnableStates(); maybeAuto(); });
       });
     }
-    // Locking reacts to HVn changes
     const hvn = document.getElementById('hvnToggle');
     if(hvn){ hvn.addEventListener('change', updateXsLockFromAutoToggle); }
-
-    // No status message
-    // Initial lock state sync
     updateXsLockFromAutoToggle();
   }
 
-  // Wire up after DOM is parsed
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireDesigner);
   else wireDesigner();
 })();
 
-// Table lock/unlock when Designer auto-apply is ON
 function updateXsLockFromAutoToggle(){
   const auto = document.getElementById('designerAutoApply');
   const lock = !!(auto && auto.checked);
@@ -1560,10 +1566,9 @@ function updateXsLockFromAutoToggle(){
       if(st) st.disabled = lock;
       if(el) el.disabled = lock;
       if(tg) tg.disabled = lock;
-      if(nv) nv.disabled = !hvnOn; // enable only when Horizontal Variation of n is ON
+      if(nv) nv.disabled = !hvnOn;
     });
   }
-  // Disable table action buttons under lock
   const ins = document.getElementById('insertRow');
   const del = document.getElementById('deleteSelected');
   const srt = document.getElementById('sortBtn');
@@ -1573,7 +1578,7 @@ function updateXsLockFromAutoToggle(){
 }
 
 /* ===================== GEOMETRY & HYDRAULICS ===================== */
-/* (The hydraulics engine below is unchanged except for cosmetic plotting tweaks) */
+/* (Engine left as in your version; removed here for brevity changes are below where needed) */
 
 function parseFloatOrNull(v){ const x=parseFloat(v); return Number.isFinite(x)?x:null; }
 
@@ -2349,6 +2354,9 @@ function renderDistTable(dist, units, Qtot, Korig){
 }
 
 /* ===================== PLOT ===================== */
+/* NEW: global to expose plot transform for click mapping */
+let _plotState = null;
+
 function renderPlot(pts, stage, wetIntervals = [], units, opts){
   const svg=document.getElementById('plot');
   svg.innerHTML='';
@@ -2368,6 +2376,9 @@ function renderPlot(pts, stage, wetIntervals = [], units, opts){
 
   const maxBed=Math.max(...zs), minBed=Math.min(...zs);
   const maxTarget = Number.isFinite(stage) ? Math.max(maxBed, stage) : maxBed;
+
+  // Publish plot state for click mapping (used by Bank Tools)
+  _plotState = { W, H, M, innerW, innerH, x0, x1, svg };
 
   const probe=niceTicks(minBed, maxTarget, 6);
   let yStep=(probe.length>=2)?(probe[1]-probe[0]):((maxTarget-minBed)||1);
@@ -2996,8 +3007,6 @@ function init(){
 init();
 
 /* ===================== USGS 3DEP MODAL INTEGRATION ===================== */
-
-/** Open the 3DEP popover unless Designer → Update XS Data is ON */
 (function wireUsgsImport(){
   const openBtn = document.getElementById('open3DEP');
   const modal = document.getElementById('usgsModal');
@@ -3014,23 +3023,21 @@ init();
     try{ frame.src = 'about:blank'; }catch(_){}
   }
 
-  function unitsLabel(){ return (document.getElementById('units')?.value || 'US'); } // 'US' or 'SI'
+  function unitsLabel(){ return (document.getElementById('units')?.value || 'US'); }
   function mToFt(x){ return x*3.280839895013123; }
   function ftToM(x){ return x*0.3048; }
   function round3(x){ return Number.isFinite(+x) ? (+x).toFixed(3) : ''; }
 
-  /** Replace XS table with imported samples; clear Stage and n */
   function applySamples(samples, srcUnits){
     if(!Array.isArray(samples) || !samples.length) return;
-    const want = unitsLabel(); // 'US' => ft, 'SI' => m
+    const want = unitsLabel();
     const fromFeet = (srcUnits === 'feet');
-    const fromMeters = !fromFeet; // default meters
+    const fromMeters = !fromFeet;
     const convert = (v)=>{
       if(want==='US' && fromMeters) return mToFt(v);
       if(want==='SI' && fromFeet ) return ftToM(v);
       return v;
     };
-    // wipe and refill
     const tbody = document.querySelector('#xsTable tbody');
     if(!tbody) return;
     tbody.innerHTML = '';
@@ -3038,7 +3045,7 @@ init();
     for(const s of samples){
       const st = Number(s.station), el = Number(s.elevation);
       if(!Number.isFinite(st) || !Number.isFinite(el)) continue;
-      addRow(round3(convert(st)), round3(convert(el)), '', ''); // Stage & n cleared
+      addRow(round3(convert(st)), round3(convert(el)), '', '');
       n++;
     }
     ensureTrailingBlankRow();
@@ -3049,7 +3056,6 @@ init();
     if(msgEl) msgEl.textContent = `Imported ${n} point(s) from USGS 3DEP. Mark LB and RB to compute.`;
   }
 
-  // Open button
   if(openBtn){
     openBtn.addEventListener('click', (e)=>{
       e.currentTarget.classList.add('clicked'); setTimeout(()=>e.currentTarget.classList.remove('clicked'),160);
@@ -3061,16 +3067,12 @@ init();
       openModal();
     });
   }
-
-  // Click outside iframe closes modal
   if(modal){
     modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
   }
-
-  // Listen for messages from embedded usgs.html
   window.addEventListener('message', (evt)=>{
     const srcWin = frame?.contentWindow;
-    if(!srcWin || evt.source !== srcWin) return; // only accept from our iframe
+    if(!srcWin || evt.source !== srcWin) return;
     const data = evt.data || {};
     if(data.type === 'usgs-import'){
       const samples = Array.isArray(data.samples) ? data.samples : [];
@@ -3082,6 +3084,257 @@ init();
     }
   });
 })();
+
+/* ===================== Filter modal wiring (filter.html) ===================== */
+(function wireFilterModal(){
+  const openBtn = document.getElementById('openFilter2');
+  const modal = document.getElementById('filterModal');
+  const frame = document.getElementById('filterFrame');
+
+  function openModal(){
+    frame.src = 'filter.html?embedded=1';
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
+  }
+  function closeModal(){
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    try{ frame.src = 'about:blank'; }catch(_){ }
+  }
+
+  function sendXsToFilter(){
+    const ptsRaw = getPointsWithStagesRaw(); // [{x,z,tag,n}]
+    const pts = ptsRaw.map(p => ({ x:Number(p.x), z:Number(p.z) }));
+    const LB = ptsRaw.find(p => p.tag==='LB') || null;
+    const RB = ptsRaw.find(p => p.tag==='RB') || null;
+    const units = document.getElementById('units')?.value || 'US';
+    try{
+      frame.contentWindow.postMessage({
+        type:'filter-xs-data',
+        payload:{
+          points: pts,
+          LBStation: LB ? LB.x : null,
+          RBStation: RB ? RB.x : null,
+          units
+        }
+      }, '*');
+    }catch(_){ }
+  }
+
+  if(openBtn){
+    openBtn.addEventListener('click', (e)=>{
+      e.currentTarget.classList.add('clicked'); setTimeout(()=>e.currentTarget.classList.remove('clicked'),160);
+      const auto = document.getElementById('designerAutoApply');
+      if(auto && auto.checked){
+        alert('Turn off "Update XS Data" in the Designer tab before filtering.');
+        return;
+      }
+      openModal();
+    });
+  }
+
+  if(modal){
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+  }
+
+  window.addEventListener('message', (evt)=>{
+    if(!frame || evt.source !== frame.contentWindow) return;
+    const data = evt.data || {};
+    if(data.type === 'filter-ready'){
+      sendXsToFilter();
+    }else if(data.type === 'filter-apply'){
+      const pl = data.payload || {};
+      const pts = Array.isArray(pl.points) ? pl.points : [];
+      const LBx = Number.isFinite(pl.LBStation) ? pl.LBStation : null;
+      const RBx = Number.isFinite(pl.RBStation) ? pl.RBStation : null;
+      applyFilteredXs(pts, LBx, RBx);
+      closeModal();
+    }else if(data.type === 'filter-close-request' || data.type === 'filter-cancel'){
+      closeModal();
+    }
+  });
+
+  function fmt3(x){ return Number.isFinite(+x) ? (+x).toFixed(3) : ''; }
+  function applyFilteredXs(points, LBx, RBx){
+    if(!Array.isArray(points) || points.length<2) return;
+    const tbody = document.querySelector('#xsTable tbody');
+    tbody.innerHTML = '';
+    for(const p of points){
+      const x = Number(p.x), z = Number(p.z);
+      if(Number.isFinite(x) && Number.isFinite(z)) addRow(fmt3(x), fmt3(z), '', '');
+    }
+    function setNearestTag(targetX, tag){
+      if(!Number.isFinite(targetX)) return;
+      const rows=[...tbody.querySelectorAll('tr')];
+      if(!rows.length) return;
+      const arr = rows.map(r => {
+        const x = parseFloat(r.querySelector('.station')?.value||'NaN');
+        return { r, x };
+      }).filter(o => Number.isFinite(o.x)).sort((a,b)=>a.x-b.x);
+      if(!arr.length) return;
+      let best=arr[0], bestD = Math.abs(arr[0].x - targetX);
+      for(const o of arr){ const d=Math.abs(o.x - targetX); if(d<bestD){best=o; bestD=d;} }
+      const sel = best.r.querySelector('.stagetag');
+      if(sel){ sel.value = tag; enforceUniqueStageTag(sel); }
+    }
+    setNearestTag(LBx, 'LB');
+    setNearestTag(RBx, 'RB');
+
+    ensureTrailingBlankRow();
+    renumberIDs();
+    clearCellSelection();
+    compute();
+  }
+})();
+
+/* ===================== NEW: Bank Tools (LB/RB) ========================= */
+(function bankTools(){
+  const btnLB = document.getElementById('setLB');
+  const btnRB = document.getElementById('setRB');
+  const lbLeft = document.getElementById('lbLeft');
+  const lbRight = document.getElementById('lbRight');
+  const rbLeft = document.getElementById('rbLeft');
+  const rbRight = document.getElementById('rbRight');
+  const svg = document.getElementById('plot');
+
+  let mode = null; // 'LB' | 'RB' | null
+
+  function setMode(m){
+    mode = (mode===m) ? null : m;
+    const onLB = (mode==='LB'), onRB = (mode==='RB');
+    btnLB && btnLB.classList.toggle('active', onLB);
+    btnRB && btnRB.classList.toggle('active', onRB);
+    if(btnLB) btnLB.setAttribute('aria-pressed', onLB ? 'true' : 'false');
+    if(btnRB) btnRB.setAttribute('aria-pressed', onRB ? 'true' : 'false');
+  }
+
+  if(btnLB) btnLB.addEventListener('click', ()=> setMode('LB'));
+  if(btnRB) btnRB.addEventListener('click', ()=> setMode('RB'));
+
+  // Helpers over current numeric rows (sorted by station)
+  function getRowsSorted(){
+    const rows = [...document.querySelectorAll('#xsTable tbody tr')];
+    const arr = rows.map(r => {
+      const x = parseFloat(r.querySelector('.station')?.value||'NaN');
+      const z = parseFloat(r.querySelector('.elevation')?.value||'NaN');
+      const tag = r.querySelector('.stagetag')?.value || '';
+      return Number.isFinite(x)&&Number.isFinite(z) ? {r,x,z,tag} : null;
+    }).filter(Boolean).sort((a,b)=>a.x-b.x);
+    return arr;
+  }
+  function findTagRow(tag){
+    const rows = [...document.querySelectorAll('#xsTable tbody tr')];
+    for(const r of rows){
+      const v = r.querySelector('.stagetag')?.value || '';
+      if(v===tag) return r;
+    }
+    return null;
+  }
+  function indexOfTag(tag){
+    const arr = getRowsSorted();
+    const r = findTagRow(tag);
+    if(!r) return -1;
+    const x = parseFloat(r.querySelector('.station')?.value||'NaN');
+    return arr.findIndex(o => Math.abs(o.x - x) < 1e-12);
+  }
+  function clampLBIndex(iNew){
+    const arr = getRowsSorted();
+    const idxRB = indexOfTag('RB');
+    if(idxRB>=0) iNew = Math.min(iNew, idxRB-1);
+    return Math.max(0, Math.min(arr.length-1, iNew));
+  }
+  function clampRBIndex(iNew){
+    const arr = getRowsSorted();
+    const idxLB = indexOfTag('LB');
+    if(idxLB>=0) iNew = Math.max(iNew, idxLB+1);
+    return Math.max(0, Math.min(arr.length-1, iNew));
+  }
+  function setTagAtIndex(tag, idx){
+    const arr = getRowsSorted();
+    if(!(idx>=0 && idx<arr.length)) return;
+    const sel = arr[idx].r.querySelector('.stagetag');
+    if(sel){
+      sel.value = tag;
+      enforceUniqueStageTag(sel);
+      compute();
+    }
+  }
+
+  // Move functions
+  function moveBank(tag, dir){
+    const arr = getRowsSorted();
+    if(!arr.length) return;
+    let idx = indexOfTag(tag);
+    if(idx < 0){
+      // Initialize if missing: LB->leftmost, RB->rightmost
+      idx = (tag==='LB') ? 0 : (arr.length-1);
+    }
+    let iNew = idx + (dir<0 ? -1 : +1);
+    iNew = (tag==='LB') ? clampLBIndex(iNew) : clampRBIndex(iNew);
+    if(iNew!==idx) setTagAtIndex(tag, iNew);
+  }
+
+  if(lbLeft)  lbLeft.addEventListener('click', (e)=>{ e.currentTarget.classList.add('clicked'); setTimeout(()=>e.currentTarget.classList.remove('clicked'),160); moveBank('LB', -1); });
+  if(lbRight) lbRight.addEventListener('click', (e)=>{ e.currentTarget.classList.add('clicked'); setTimeout(()=>e.currentTarget.classList.remove('clicked'),160); moveBank('LB', +1); });
+  if(rbLeft)  rbLeft.addEventListener('click', (e)=>{ e.currentTarget.classList.add('clicked'); setTimeout(()=>e.currentTarget.classList.remove('clicked'),160); moveBank('RB', -1); });
+  if(rbRight) rbRight.addEventListener('click', (e)=>{ e.currentTarget.classList.add('clicked'); setTimeout(()=>e.currentTarget.classList.remove('clicked'),160); moveBank('RB', +1); });
+
+  // Click on plot to set LB/RB to nearest station
+  function viewboxXFromClient(evt){
+    if(!_plotState || !_plotState.svg) return null;
+    const rect = _plotState.svg.getBoundingClientRect();
+    const px = evt.clientX - rect.left;
+    const scaleX = (_plotState.W || 1000) / rect.width;
+    return px * scaleX;
+  }
+  function stationFromClient(evt){
+    if(!_plotState) return null;
+    const vx = viewboxXFromClient(evt);
+    if(vx==null) return null;
+    const { M, innerW, x0, x1 } = _plotState;
+    if(!(innerW>0)) return null;
+    const t = (vx - M.left) / innerW;
+    const s = x0 + t * (x1 - x0);
+    return s;
+  }
+  function setBankAtClick(evt, tag){
+    const sClick = stationFromClient(evt);
+    if(sClick==null) return;
+    const arr = getRowsSorted();
+    if(!arr.length) return;
+
+    let idxRB = indexOfTag('RB');
+    let idxLB = indexOfTag('LB');
+
+    // choose nearest candidate with LB<RB constraint
+    let best = -1, bestD = Infinity;
+    for(let i=0;i<arr.length;i++){
+      const x = arr[i].x;
+      if(tag==='LB' && idxRB>=0 && i>=idxRB) continue;
+      if(tag==='RB' && idxLB>=0 && i<=idxLB) continue;
+      const d = Math.abs(x - sClick);
+      if(d<bestD){ best=i; bestD=d; }
+    }
+    // If none (because of constraints), clamp to valid boundary
+    if(best<0){
+      if(tag==='LB'){
+        best = (idxRB>=0) ? Math.max(0, idxRB-1) : 0;
+      } else {
+        best = (idxLB>=0) ? Math.min(arr.length-1, idxLB+1) : (arr.length-1);
+      }
+    }
+    setTagAtIndex(tag, best);
+  }
+
+  if(svg){
+    svg.addEventListener('click', (evt)=>{
+      if(mode==='LB'){ setBankAtClick(evt, 'LB'); setMode(null); }
+      else if(mode==='RB'){ setBankAtClick(evt, 'RB'); setMode(null); }
+    });
+  }
+})();
+
+
 </script>
 </body>
 </html>
