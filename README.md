@@ -1,6 +1,6 @@
 # 1D Cross-Section Hydraulics Calculator
 
-A single-page web app that computes 1D open-channel hydraulics for a single cross-section using Manning’s equation. Open `index.html` in a modern browser, build or import a cross-section, and the app computes discharge and other metrics (or, if you specify discharge, it solves for the stage/depth that conveys it).
+A single-page web app that computes 1D open-channel hydraulics for a single cross-section using Manning’s equation. Open `index.html` in a modern browser, build or import a cross-section, and the app computes discharge and other metrics (or, if you specify discharge, it solves for stage/depth that conveys it).
 
 **Key Features**
 - **Units:** US (ft, s) or SI (m, s); `k=1.486` (US) or `k=1.0` (SI).
