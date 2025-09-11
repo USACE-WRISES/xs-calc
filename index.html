@@ -54,36 +54,28 @@
     button.clicked{animation:btnflash 180ms ease-out}
     @keyframes btnflash{0%{background:#fff}40%{background:#e9e9e9}100%{background:#fff}}
 
-    /* === Cross-Section action buttons === */
+    /* --- XS toolbar: keep on one line and center align --- */
     .actions.actions-xs{
       display:flex;
-      align-items:center;
+      flex-wrap:nowrap;         /* prevent second row */
+      align-items:center;       /* vertical alignment */
       gap:8px;
-      flex-wrap:wrap;        /* ✅ allow wrap if needed */
-      white-space:nowrap;    /* prevent label breaking inside buttons */
+      min-width:0;              /* allow container to shrink */
+      overflow-x:auto;          /* if space is truly too small, scroll instead of wrap */
+      -webkit-overflow-scrolling: touch;
     }
 
-    .actions.actions-xs > *{
-      flex:0 0 auto;         /* keep each button sized to content */
+    /* Buttons in that row should not grow or shrink */
+    .actions.actions-xs > button{
+      flex:0 0 auto;            /* keep intrinsic width */
+      white-space:nowrap;       /* keep label on one line */
+      line-height:1.1;          /* consistent height */
     }
 
-    /* Keep them visually uniform */
-    .actions.actions-xs button{
-      padding:10px 16px;     /* same horizontal padding for all */
-      border-radius:10px;
-      font-size:0.92rem;
-      white-space:nowrap;
-    }
-
-    /* Optional: if you want horizontal scroll instead of wrapping */
-    @media (max-width: 700px){
-      .actions.actions-xs{
-        overflow-x:auto;
-        flex-wrap:nowrap;   /* only scroll on very narrow screens */
-        -webkit-overflow-scrolling:touch;
-        padding-bottom:2px;
-      }
-      .actions.actions-xs::-webkit-scrollbar{height:8px}
+    /* Tight, equal horizontal padding for those three buttons */
+    .btn-tight{
+      padding:6px 10px !important;   /* minimal, even left/right */
+      border-radius:10px;            /* matches your style */
     }
 
 
@@ -610,11 +602,12 @@
         <em>Left Overbank</em>, <em>Main Channel</em>, and <em>Right Overbank</em>.
       </p>
       <div class="actions actions-xs">
-        <button id="insertRow">Insert Row</button>
-        <button id="deleteSelected" class="harmonize">Delete Selected</button>
-        <button id="sortBtn" class="harmonize" title="Sort stations ascending">Sort by Station</button>
+        <button id="insertRow" class="btn-tight">Insert Row</button>
+        <button id="deleteSelected" class="harmonize btn-tight">Delete Selected</button>
+        <button id="sortBtn" class="harmonize btn-tight" title="Sort stations ascending">Sort by Station</button>
+
         <!-- Legacy Filter button kept in DOM but hidden via CSS -->
-        <button id="openFilter" class="btnSecondary" title="Filter cross‑section points">
+        <button id="openFilter" class="btnSecondary" title="Filter cross-section points">
           <span class="ico-funnel" aria-hidden="true"></span>Filter
         </button>
       </div>
