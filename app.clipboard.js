@@ -357,6 +357,65 @@
     }
   }
 
+    // ---- Manual multi-line paste dialog (replaces window.prompt fallback) ----
+  function manualPasteDialog(){
+    return new Promise((resolve)=>{
+      let backdrop = document.getElementById('pasteModal');
+      if(!backdrop){
+        backdrop = document.createElement('div');
+        backdrop.id = 'pasteModal';
+        backdrop.className = 'modalBackdrop';
+        backdrop.innerHTML = `
+          <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pasteTitle">
+            <header style="display:flex;align-items:center;justify-content:space-between;padding:0;border-bottom:none">
+              <h3 id="pasteTitle" style="margin:0;font-size:1.05rem;">Paste data</h3>
+              <div class="rightBtns">
+                <button id="pasteCancel" class="btnSecondary" aria-label="Cancel">Cancel</button>
+                <button id="pasteOk" class="btnPrimary" aria-label="OK">OK</button>
+              </div>
+            </header>
+            <div style="display:grid;gap:8px">
+              <p class="small" style="margin:0 0 6px;">
+                Paste tab-, comma-, semicolon-, or whitespace-separated data below. Press <b>Ctrl/Cmd+Enter</b> to apply.
+              </p>
+              <textarea id="pasteText" rows="12" spellcheck="false"
+                        style="width:100%;min-height:260px;border:1px solid #e0e0e0;border-radius:10px;padding:10px;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;"></textarea>
+            </div>
+          </div>`;
+        document.body.appendChild(backdrop);
+      }
+
+      const ta = backdrop.querySelector('#pasteText');
+      const btnOk = backdrop.querySelector('#pasteOk');
+      const btnCancel = backdrop.querySelector('#pasteCancel');
+
+      function close(result){
+        // hide and cleanup handlers
+        backdrop.style.display = 'none';
+        document.body.classList.remove('modal-open');
+        window.removeEventListener('keydown', onKeydown, true);
+        resolve(result);
+      }
+      function onKeydown(e){
+        if(e.key === 'Escape'){ e.preventDefault(); close(null); }
+        if((e.key === 'Enter') && (e.metaKey || e.ctrlKey)){ e.preventDefault(); close(ta.value); }
+      }
+
+      // show
+      backdrop.style.display = 'flex';
+      document.body.classList.add('modal-open');
+      ta.value = '';
+      setTimeout(()=>{ ta.focus(); }, 0);
+
+      // wire
+      window.addEventListener('keydown', onKeydown, true);
+      btnOk.onclick = ()=> close(ta.value);
+      btnCancel.onclick = ()=> close(null);
+    });
+  }
+
+
+
   async function pasteFromClipboard(btn){
     if(isXsLocked()){
       alert('Turn off “Update XS Data” in the Designer tab before pasting into the Cross‑Section table.');
@@ -370,8 +429,8 @@
         throw new Error('Clipboard API unavailable');
       }
     }catch(err){
-      // Manual fallback with multi-line support via textarea modal
-      const manual = await showManualPasteDialog();
+      // Multi-line fallback dialog (works when Clipboard API is blocked)
+      const manual = await manualPasteDialog();
       if(manual == null) return; // canceled
       txt = manual;
     }
@@ -390,63 +449,6 @@
 
     if(typeof focusGrid === 'function') focusGrid();
     flash(btn);
-  }
-
-  // --- Manual multi-line paste dialog (textarea-based) ---
-  function showManualPasteDialog(){
-    return new Promise(resolve => {
-      const backdrop = document.createElement('div');
-      backdrop.className = 'modalBackdrop';
-      backdrop.setAttribute('role','dialog');
-      backdrop.setAttribute('aria-modal','true');
-      backdrop.setAttribute('aria-labelledby','pasteTitle');
-
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.innerHTML = `
-        <header>
-          <h3 id="pasteTitle">Paste Data</h3>
-          <div class="rightBtns"><button id="closePaste" class="btnLink" aria-label="Close">Close</button></div>
-        </header>
-        <div>
-          <p class="small">Paste tab-, comma-, semicolon-, or whitespace-separated data below, then click OK.</p>
-          <textarea id="pasteTextarea" rows="10" style="width:100%;font-family:ui-monospace,Consolas,Menlo,monospace"></textarea>
-          <div class="actions" style="justify-content:flex-end;margin-top:10px;">
-            <button id="cancelPaste" class="btnSecondary">Cancel</button>
-            <button id="okPaste" class="btnPrimary">OK</button>
-          </div>
-        </div>
-      `;
-
-      backdrop.appendChild(modal);
-      document.body.appendChild(backdrop);
-      try{ document.body.classList.add('modal-open'); }catch(_){ }
-
-      const ta = modal.querySelector('#pasteTextarea');
-      const btnOk = modal.querySelector('#okPaste');
-      const btnCancel = modal.querySelector('#cancelPaste');
-      const btnClose = modal.querySelector('#closePaste');
-
-      function close(result){
-        try{ document.body.classList.remove('modal-open'); }catch(_){ }
-        try{ document.body.removeChild(backdrop); }catch(_){ }
-        resolve(result);
-      }
-
-      btnOk.addEventListener('click', ()=> close(ta.value));
-      btnCancel.addEventListener('click', ()=> close(null));
-      btnClose.addEventListener('click', ()=> close(null));
-      backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) close(null); });
-
-      // Keyboard: Esc to cancel, Ctrl/Cmd+Enter to accept
-      const keyHandler = (e)=>{
-        if(e.key === 'Escape'){ e.preventDefault(); close(null); }
-        if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); close(ta.value); }
-      };
-      modal.addEventListener('keydown', keyHandler);
-
-      setTimeout(()=>{ try{ ta.focus(); }catch(_){ } }, 0);
-    });
   }
 
   // Wire up buttons if present
