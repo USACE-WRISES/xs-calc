@@ -370,8 +370,8 @@
         throw new Error('Clipboard API unavailable');
       }
     }catch(err){
-      // Minimal manual fallback
-      const manual = window.prompt('Paste tab-, comma-, semicolon-, or whitespace-separated data here, then click OK:', '');
+      // Manual fallback with multi-line support via textarea modal
+      const manual = await showManualPasteDialog();
       if(manual == null) return; // canceled
       txt = manual;
     }
@@ -390,6 +390,63 @@
 
     if(typeof focusGrid === 'function') focusGrid();
     flash(btn);
+  }
+
+  // --- Manual multi-line paste dialog (textarea-based) ---
+  function showManualPasteDialog(){
+    return new Promise(resolve => {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'modalBackdrop';
+      backdrop.setAttribute('role','dialog');
+      backdrop.setAttribute('aria-modal','true');
+      backdrop.setAttribute('aria-labelledby','pasteTitle');
+
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.innerHTML = `
+        <header>
+          <h3 id="pasteTitle">Paste Data</h3>
+          <div class="rightBtns"><button id="closePaste" class="btnLink" aria-label="Close">Close</button></div>
+        </header>
+        <div>
+          <p class="small">Paste tab-, comma-, semicolon-, or whitespace-separated data below, then click OK.</p>
+          <textarea id="pasteTextarea" rows="10" style="width:100%;font-family:ui-monospace,Consolas,Menlo,monospace"></textarea>
+          <div class="actions" style="justify-content:flex-end;margin-top:10px;">
+            <button id="cancelPaste" class="btnSecondary">Cancel</button>
+            <button id="okPaste" class="btnPrimary">OK</button>
+          </div>
+        </div>
+      `;
+
+      backdrop.appendChild(modal);
+      document.body.appendChild(backdrop);
+      try{ document.body.classList.add('modal-open'); }catch(_){ }
+
+      const ta = modal.querySelector('#pasteTextarea');
+      const btnOk = modal.querySelector('#okPaste');
+      const btnCancel = modal.querySelector('#cancelPaste');
+      const btnClose = modal.querySelector('#closePaste');
+
+      function close(result){
+        try{ document.body.classList.remove('modal-open'); }catch(_){ }
+        try{ document.body.removeChild(backdrop); }catch(_){ }
+        resolve(result);
+      }
+
+      btnOk.addEventListener('click', ()=> close(ta.value));
+      btnCancel.addEventListener('click', ()=> close(null));
+      btnClose.addEventListener('click', ()=> close(null));
+      backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) close(null); });
+
+      // Keyboard: Esc to cancel, Ctrl/Cmd+Enter to accept
+      const keyHandler = (e)=>{
+        if(e.key === 'Escape'){ e.preventDefault(); close(null); }
+        if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); close(ta.value); }
+      };
+      modal.addEventListener('keydown', keyHandler);
+
+      setTimeout(()=>{ try{ ta.focus(); }catch(_){ } }, 0);
+    });
   }
 
   // Wire up buttons if present
