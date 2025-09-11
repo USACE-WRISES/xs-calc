@@ -1,6 +1,6 @@
-// app.clipboard.js
-// Excel-compatible copy/cut/paste for the Cross-Section table.
-// Requires: app.ui.js to be loaded first (so it can use its selection & helpers).
+// app.clipboard.js (REVISED)
+// Excel-compatible copy/cut/paste for the Cross-Section table + Copy/Paste buttons.
+// Requires: app.ui.js loaded first (selection helpers).
 
 (function(){
   const XS_TABLE_ID = 'xsTable';
@@ -107,7 +107,7 @@
     if(!mat || !mat.length) return mat;
     const first = mat[0];
     const a = first[0] ?? '', b = first[1] ?? '';
-    // If the first two tokens are neither numbers nor LB/RB, treat first row as header.
+    // If first two tokens are neither numbers nor LB/RB, treat first row as header.
     if(!looksNumber(a) && !looksStage(a) && !looksNumber(b) && !looksStage(b)){
       return mat.slice(1);
     }
@@ -122,7 +122,7 @@
         inp.value = normalizeNum(raw);
       }
     }else{
-      // If 'n' column is hidden (HVn OFF) and target is the 3rd editable column (index 2), write to .nval directly.
+      // If 'n' is hidden and target is the 3rd editable column (index 2), write to .nval directly.
       if(colIdx === 2){
         const tr = getRows()[rowIdx];
         const nv = tr?.querySelector('input.nval');
@@ -176,7 +176,7 @@
     return !!(auto && auto.checked);
   }
 
-  // ---------- COPY ----------
+  // ---------- COPY (keyboard) ----------
   document.addEventListener('copy', (e)=>{
     if(getActiveEditingInputSafe()) return; // allow copying text inside an input normally
     if(!isGridContext()) return;
@@ -188,7 +188,7 @@
     e.preventDefault();
   });
 
-  // ---------- CUT ----------
+  // ---------- CUT (keyboard) ----------
   document.addEventListener('cut', (e)=>{
     if(getActiveEditingInputSafe()) return;
     if(!isGridContext()) return;
@@ -198,11 +198,10 @@
     try { e.clipboardData.setData('text/plain', tsv); } catch(_){}
     try { e.clipboardData.setData('text/tab-separated-values', tsv); } catch(_){}
     e.preventDefault();
-    // Clear selected cells after cutting
     if(typeof clearSelectedCells === 'function') clearSelectedCells();
   });
 
-  // ---------- PASTE ----------
+  // ---------- PASTE (keyboard) ----------
   document.addEventListener('paste', (e)=>{
     if(getActiveEditingInputSafe()) return; // let browser paste into the focused input
     if(!isGridContext()) return;
@@ -227,14 +226,72 @@
     if(typeof focusGrid === 'function') focusGrid();
   });
 
-  // ---------- SELECT ALL (Ctrl/Cmd + A) ----------
-  document.addEventListener('keydown', (e)=>{
-    if(!((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='a')) return;
-    if(getActiveEditingInputSafe()) return;
-    if(!isGridContext()) return;
-    e.preventDefault();
-    if(typeof clearCellSelection === 'function') clearCellSelection();
-    getRows().forEach(tr => addRowCellsToSelection(tr));
+  // ---------- Buttons: Copy / Paste ----------
+  function flash(btn){
+    try{
+      btn.classList.add('clicked');
+      setTimeout(()=>btn.classList.remove('clicked'),160);
+    }catch(_){}
+  }
+
+  async function copySelectionToClipboard(btn){
+    const mat = buildCopyMatrix();
+    if(!mat.length){ alert('Nothing to copy. Select cells or ensure the table has data.'); return; }
+    const tsv = matrixToTSV(mat);
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(tsv);
+      }else{
+        // Fallback: hidden textarea + execCommand
+        const ta = document.createElement('textarea');
+        ta.value = tsv; ta.style.position='fixed'; ta.style.opacity='0'; ta.style.pointerEvents='none';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      flash(btn);
+    }catch(err){
+      console.error(err);
+      alert('Copy failed. Try Ctrl/Cmd+C.');
+    }
+  }
+
+  async function pasteFromClipboard(btn){
+    if(isXsLocked()){
+      alert('Turn off “Update XS Data” in the Designer tab before pasting into the Cross‑Section table.');
+      return;
+    }
+    let txt = '';
+    try{
+      if(navigator.clipboard && navigator.clipboard.readText){
+        txt = await navigator.clipboard.readText();
+      }else{
+        throw new Error('Clipboard API unavailable');
+      }
+    }catch(err){
+      // Minimal manual fallback
+      const manual = window.prompt('Paste tab- or comma-separated data here, then click OK:', '');
+      if(manual == null) return; // canceled
+      txt = manual;
+    }
+    if(!txt || !txt.trim()){ alert('Clipboard is empty.'); return; }
+
+    const mat = parseClipboard(txt);
+    const start = (typeof singleSelectedCell === 'function' && singleSelectedCell())
+               || (typeof firstSelectedCell === 'function' && firstSelectedCell())
+               || getCellByRowCol(0,0);
+    if(!start){ alert('Select a target cell first.'); return; }
+
+    applyMatrixAt(start, mat);
     if(typeof focusGrid === 'function') focusGrid();
+    flash(btn);
+  }
+
+  // Wire up buttons if present
+  window.addEventListener('DOMContentLoaded', ()=>{
+    const btnCopy = document.getElementById('btnCopyXS');
+    const btnPaste = document.getElementById('btnPasteXS');
+    if(btnCopy) btnCopy.addEventListener('click', ()=> copySelectionToClipboard(btnCopy));
+    if(btnPaste) btnPaste.addEventListener('click', ()=> pasteFromClipboard(btnPaste));
   });
 })();

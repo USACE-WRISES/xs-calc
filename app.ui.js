@@ -928,26 +928,46 @@ function compute(){
   const useQ = !!document.getElementById('specifyQ').checked;
   const Qtarget = parseFloat(document.getElementById('discharge').value);
 
-  const plotShade=document.getElementById('plotShade');
-  const plotNote =document.getElementById('plotNote');
-  const resShade =document.getElementById('resultsShade');
-  const resNote =document.getElementById('resultsNote');
-  const distShade=document.getElementById('distShade');
-  const distNote =document.getElementById('distNote');
-  const convShade=document.getElementById('convShade');
-  const convNote =document.getElementById('convNote');
-  [plotShade,plotNote,resShade,resNote,distShade,distNote,convShade,convNote].forEach(el=>{ el.style.display='none'; el.textContent=''; });
+  // --- Overlays: Results only (plot stays interactive) ---
+  const resShade = document.getElementById('resultsShade');
+  const resNote  = document.getElementById('resultsNote');
+  const distShade= document.getElementById('distShade');
+  const distNote = document.getElementById('distNote');
+  const convShade= document.getElementById('convShade');
+  const convNote = document.getElementById('convNote');
+
+  // Clear any prior overlays/messages on Results tables
+  [resShade, resNote, distShade, distNote, convShade, convNote].forEach(el => {
+    if (!el) return;
+    el.style.display = 'none';
+    // Notes (text containers) get their content cleared
+    if (el === resNote || el === distNote || el === convNote) el.textContent = '';
+  });
   document.getElementById('summary').classList.remove('disabled');
   document.getElementById('distTable').classList.remove('disabled');
   document.getElementById('convTable').classList.remove('disabled');
 
+  // Show overlays only on Results — never on the cross‑section plot
   function greyOutAll(msg){
-    [plotShade, plotNote, resShade, resNote, distShade, distNote, convShade, convNote].forEach(el=>el.style.display='flex');
-    plotNote.textContent=msg; resNote.textContent=msg; distNote.textContent=msg; convNote.textContent=msg;
+    [resShade, resNote, distShade, distNote, convShade, convNote].forEach(el => {
+      if (el) el.style.display = 'flex';
+    });
+    if (resNote)  resNote.textContent  = msg;
+    if (distNote) distNote.textContent = msg;
+    if (convNote) convNote.textContent = msg;
     document.getElementById('summary').classList.add('disabled');
     document.getElementById('distTable').classList.add('disabled');
     document.getElementById('convTable').classList.add('disabled');
   }
+  function greyOutDist(msg){
+    if (distShade) distShade.style.display = 'flex';
+    if (distNote){
+      distNote.style.display = 'flex';
+      distNote.textContent = msg;
+    }
+    document.getElementById('distTable').classList.add('disabled');
+  }
+
   function greyOutDist(msg){
     [distShade, distNote].forEach(el=>el.style.display='flex');
     distNote.textContent=msg;
