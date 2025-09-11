@@ -53,6 +53,30 @@
     button{background:#fff;cursor:pointer;}
     button.clicked{animation:btnflash 180ms ease-out}
     @keyframes btnflash{0%{background:#fff}40%{background:#e9e9e9}100%{background:#fff}}
+
+    /* === Keep the XS action buttons on one line === */
+    .actions.actions-xs{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:nowrap;      /* override the base .actions wrap */
+      white-space:nowrap;    /* prevent label wrapping */
+    }
+
+    .actions.actions-xs > *{
+      flex:0 0 auto;         /* don't let flexbox shrink them onto a new line */
+    }
+
+    /* Optional: allow horizontal scroll on very narrow screens instead of wrapping */
+    @media (max-width: 700px){
+      .actions.actions-xs{
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+        padding-bottom:2px;
+      }
+      .actions.actions-xs::-webkit-scrollbar{height:8px}
+    }
+
     .labelTitle{display:flex;align-items:center;gap:6px}
     .info{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid #bcbcbc;color:#555;background:#fff;font-size:11px;line-height:1;cursor:help;user-select:none}
     .info::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:130%;width:290px;max-width:70vw;padding:8px 10px;border-radius:8px;background:rgba(20,20,20,.95);color:#fff;font-size:12px;line-height:1.35;box-shadow:0 6px 16px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:opacity .12s ease-out;z-index:1000}
