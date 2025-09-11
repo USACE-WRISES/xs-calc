@@ -59,22 +59,27 @@
       display:flex;
       align-items:center;
       gap:8px;
-      flex-wrap:nowrap;      /* override the base .actions wrap */
-      white-space:nowrap;    /* prevent label wrapping */
+      flex-wrap:nowrap;      /* prevent wrapping to next row */
+      white-space:nowrap;    /* keep button labels from wrapping */
     }
-
     .actions.actions-xs > *{
-      flex:0 0 auto;         /* don't let flexbox shrink them onto a new line */
+      flex:0 0 auto;         /* don't shrink into a new line */
     }
-
-    /* Optional: allow horizontal scroll on very narrow screens instead of wrapping */
     @media (max-width: 700px){
       .actions.actions-xs{
-        overflow-x:auto;
+        overflow-x:auto;                 /* allow horizontal scroll on tiny widths */
         -webkit-overflow-scrolling:touch;
         padding-bottom:2px;
       }
       .actions.actions-xs::-webkit-scrollbar{height:8px}
+    }
+
+    /* === Make Insert Row / Delete Selected / Sort by Station the same size === */
+    /* (match the current "Delete Selected" sizing) */
+    .actions.actions-xs button{
+      padding:10px 16px;     /* uniform L/R padding */
+      border-radius:10px;
+      font-size:0.92rem;
     }
 
     .labelTitle{display:flex;align-items:center;gap:6px}
