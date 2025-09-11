@@ -54,33 +54,38 @@
     button.clicked{animation:btnflash 180ms ease-out}
     @keyframes btnflash{0%{background:#fff}40%{background:#e9e9e9}100%{background:#fff}}
 
-    /* === Keep the XS action buttons on one line === */
+    /* === Cross-Section action buttons === */
     .actions.actions-xs{
       display:flex;
       align-items:center;
       gap:8px;
-      flex-wrap:nowrap;      /* prevent wrapping to next row */
-      white-space:nowrap;    /* keep button labels from wrapping */
+      flex-wrap:wrap;        /* ✅ allow wrap if needed */
+      white-space:nowrap;    /* prevent label breaking inside buttons */
     }
+
     .actions.actions-xs > *{
-      flex:0 0 auto;         /* don't shrink into a new line */
+      flex:0 0 auto;         /* keep each button sized to content */
     }
+
+    /* Keep them visually uniform */
+    .actions.actions-xs button{
+      padding:10px 16px;     /* same horizontal padding for all */
+      border-radius:10px;
+      font-size:0.92rem;
+      white-space:nowrap;
+    }
+
+    /* Optional: if you want horizontal scroll instead of wrapping */
     @media (max-width: 700px){
       .actions.actions-xs{
-        overflow-x:auto;                 /* allow horizontal scroll on tiny widths */
+        overflow-x:auto;
+        flex-wrap:nowrap;   /* only scroll on very narrow screens */
         -webkit-overflow-scrolling:touch;
         padding-bottom:2px;
       }
       .actions.actions-xs::-webkit-scrollbar{height:8px}
     }
 
-    /* === Make Insert Row / Delete Selected / Sort by Station the same size === */
-    /* (match the current "Delete Selected" sizing) */
-    .actions.actions-xs button{
-      padding:10px 16px;     /* uniform L/R padding */
-      border-radius:10px;
-      font-size:0.92rem;
-    }
 
     .labelTitle{display:flex;align-items:center;gap:6px}
     .info{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid #bcbcbc;color:#555;background:#fff;font-size:11px;line-height:1;cursor:help;user-select:none}
