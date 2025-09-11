@@ -212,25 +212,37 @@
     }
 
     /* Larger, stroke-only icons for the XS toolbar (from the previous step) */
-  .iconBtn svg.ico-stroke { width:22px; height:22px; }
-  .iconBtn svg.ico-stroke * {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
+    .iconBtn svg.ico-stroke { width:22px; height:22px; }
+    .iconBtn svg.ico-stroke * {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
 
-  /* Make the "3DEP" text button match the 34px icon button height */
-  #open3DEP.btnSecondary{
-    height: 34px;              /* same as .iconBtn */
-    padding: 0 12px;           /* remove vertical padding, keep horizontal */
-    display: inline-flex;      /* center the label vertically */
-    align-items: center;
-    justify-content: center;
-    line-height: 1;            /* prevent extra text leading from adding height */
-    border-radius: 10px;       /* visually matches icon buttons */
-  }
+    
+
+    /* Make the "3DEP" text button match the 34px icon button height */
+    #open3DEP.btnSecondary{
+      height: 34px;              /* same as .iconBtn */
+      padding: 0 12px;           /* remove vertical padding, keep horizontal */
+      display: inline-flex;      /* center the label vertically */
+      align-items: center;
+      justify-content: center;
+      line-height: 1;            /* prevent extra text leading from adding height */
+      border-radius: 10px;       /* visually matches icon buttons */
+    }
+
+    /* --- Subtle click micro‑interaction for icon toolbar buttons --- */
+    .iconBtn{
+      position: relative;
+      transition: transform 120ms ease, box-shadow 160ms ease, background-color 160ms ease;
+      will-change: transform;
+    }
+
+    /* Small tactile press on mouse/touch down */
+    .iconBtn:active{ transform: scale(0.95); }
 
 
   </style>
@@ -541,7 +553,7 @@
         <h2>Cross‑Section Data</h2>
         <div style="display:flex; align-items:center; gap:8px;">
           <!-- Copy (stroke-only, slightly larger) -->
-          <button id="btnCopyXS" class="btnSecondary iconBtn" title="Copy selection to clipboard" aria-label="Copy to clipboard">
+          <button id="btnCopyXS" class="btnSecondary iconBtn" title="Copy all to clipboard" aria-label="Copy to clipboard">
             <svg viewBox="0 0 24 24" class="ico-stroke" role="img" aria-hidden="true">
               <!-- two overlapped documents -->
               <rect x="9" y="3" width="10" height="12" rx="2" ry="2"></rect>

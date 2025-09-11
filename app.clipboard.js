@@ -1,11 +1,18 @@
-// app.clipboard.js (REVISED)
+// app.clipboard.js (RE-REVISED)
 // Excel-compatible copy/cut/paste for the Cross-Section table + Copy/Paste buttons.
+// Major fixes:
+//  • Smarter delimiter detection (tab, comma, semicolon, or whitespace)
+//  • Paste button now ingests all rows. If no cell is selected, it REPLACES the table
+//    with the pasted rows. If a cell is selected, it pastes starting at that cell.
+//  • Keeps header auto-skip and LB/RB recognition.
+//
 // Requires: app.ui.js loaded first (selection helpers).
 
 (function(){
   const XS_TABLE_ID = 'xsTable';
 
   // ---------- helpers ----------
+
   function isGridContext(){
     const grid = document.getElementById(XS_TABLE_ID);
     if(!grid) return false;
@@ -95,17 +102,47 @@
     return mat.map(row => row.map(v => String(v ?? '')).join('\t')).join('\n');
   }
 
+  // --- NEW: smarter delimiter detection & parsing ---
+  function detectDelimiter(lines){
+    // Examine up to first 50 non-empty lines
+    const sample = lines.filter(Boolean).slice(0, 50);
+    const candidates = [
+      { delim: '\t', score: 0 },
+      { delim: ',',  score: 0 },
+      { delim: ';',  score: 0 },
+      { delim: /\s+/, score: 0 } // one-or-more whitespace as a fallback
+    ];
+    for(const c of candidates){
+      let totalCols = 0, rows = 0;
+      for(const ln of sample){
+        const parts = (c.delim instanceof RegExp) ? ln.trim().split(c.delim) : ln.split(c.delim);
+        const nonEmptyCols = parts.filter(p => p !== '').length;
+        if(nonEmptyCols>0){ totalCols += nonEmptyCols; rows++; }
+      }
+      c.score = rows ? totalCols / rows : 0;
+    }
+    candidates.sort((a,b)=> b.score - a.score);
+    return candidates[0].delim;
+  }
+
   function parseClipboard(text){
     const t = String(text||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
-    const lines = t.split('\n');
-    const notTrailingEmpty = (i) => !(i===lines.length-1 && lines[i].trim()==='');
-    const delim = t.indexOf('\t')>=0 ? '\t' : ',';
-    return lines.filter((_,i)=>notTrailingEmpty(i)).map(line => line.split(delim));
+    const rawLines = t.split('\n');
+    const lines = rawLines.filter((ln,i)=> !(i===rawLines.length-1 && ln.trim()==='')); // drop trailing blank
+    if(!lines.length) return [];
+
+    const delim = detectDelimiter(lines);
+    const rows = lines.map(line => {
+      const parts = (delim instanceof RegExp) ? line.trim().split(delim) : line.split(delim);
+      return parts.map(s => s == null ? '' : String(s));
+    });
+
+    return rows;
   }
 
   function maybeDropHeader(mat){
     if(!mat || !mat.length) return mat;
-    const first = mat[0];
+    const first = mat[0] || [];
     const a = first[0] ?? '', b = first[1] ?? '';
     // If first two tokens are neither numbers nor LB/RB, treat first row as header.
     if(!looksNumber(a) && !looksStage(a) && !looksNumber(b) && !looksStage(b)){
@@ -118,9 +155,7 @@
     const td = getCellByRowCol(rowIdx, colIdx);
     if(td){
       const inp = td.querySelector('input');
-      if(inp){
-        inp.value = normalizeNum(raw);
-      }
+      if(inp){ inp.value = normalizeNum(raw); }
     }else{
       // If 'n' is hidden and target is the 3rd editable column (index 2), write to .nval directly.
       if(colIdx === 2){
@@ -128,6 +163,12 @@
         const nv = tr?.querySelector('input.nval');
         if(nv) nv.value = normalizeNum(raw);
       }
+    }
+  }
+
+  function ensureRowsUpTo(targetRow){
+    while(targetRow >= getRows().length - 1){
+      addRow('','','','');
     }
   }
 
@@ -143,10 +184,7 @@
 
     for(let i=0;i<mat.length;i++){
       const targetRow = rStart + i;
-      // Ensure row exists (keep one trailing blank row at least)
-      while(targetRow >= getRows().length - 1){
-        addRow('','','','');
-      }
+      ensureRowsUpTo(targetRow);
       const tr = getRows()[targetRow];
       let stageTag = null;
 
@@ -169,6 +207,65 @@
     renumberIDs();
     clearCellSelection();
     compute();
+  }
+
+  // NEW: replace entire XS table with matrix (used when pasting with no active selection)
+  function applyMatrixReplacingTable(mat){
+    if(!Array.isArray(mat) || !mat.length) return;
+    mat = maybeDropHeader(mat);
+
+    const tbody = document.querySelector('#xsTable tbody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+
+    // Accept rows as: [station, elevation, (optional LB/RB), (optional n)]
+    const toNum = (s)=> {
+      const v = parseFloat(String(s).replace(/,/g,'').trim());
+      return Number.isFinite(v) ? v : null;
+    };
+    function asStageToken(toks){
+      // Find LB/RB anywhere in the row
+      for(const tok of toks){
+        const T = String(tok||'').trim().toUpperCase();
+        if(T==='LB' || T==='RB') return T;
+      }
+      return '';
+    }
+    function maybeN(toks){
+      // if there is an obvious numeric 'n' token beyond the first two columns, use it
+      for(let i=2;i<toks.length;i++){
+        const v = toNum(toks[i]);
+        if(v != null) return v;
+      }
+      return '';
+    }
+
+    let rowsAdded = 0;
+    for(const rawRow of mat){
+      if(!rawRow || !rawRow.length) continue;
+      // Prefer first two numeric-looking fields for station & elevation
+      const st = toNum(rawRow[0]);
+      const el = toNum(rawRow[1]);
+      if(st == null || el == null) continue;
+
+      const stage = asStageToken(rawRow);
+      const nVal = maybeN(rawRow);
+      addRow(
+        Number.isFinite(+st) ? (+st).toFixed(3) : '',
+        Number.isFinite(+el) ? (+el).toFixed(3) : '',
+        stage,
+        (nVal === '' ? '' : (Number.isFinite(+nVal) ? (+nVal).toFixed(3) : ''))
+      );
+      rowsAdded++;
+    }
+
+    ensureTrailingBlankRow();
+    renumberIDs();
+    clearCellSelection();
+    compute();
+
+    const msgEl = document.getElementById('messages');
+    if(msgEl) msgEl.textContent = rowsAdded ? `Pasted ${rowsAdded} row(s).` : 'Nothing pasted (no valid rows detected).';
   }
 
   function isXsLocked(){
@@ -216,13 +313,17 @@
     if(!txt) return;
 
     const mat = parseClipboard(txt);
-    const start = (typeof singleSelectedCell === 'function' && singleSelectedCell())
-               || (typeof firstSelectedCell === 'function' && firstSelectedCell())
-               || getCellByRowCol(0,0);
+    const haveSelection = (typeof selectedCells !== 'undefined' && selectedCells && selectedCells.size > 0);
+    const start = haveSelection
+      ? ((typeof singleSelectedCell === 'function' && singleSelectedCell())
+          || (typeof firstSelectedCell === 'function' && firstSelectedCell())
+          || getCellByRowCol(0,0))
+      : null;
 
-    if(!start) return;
     e.preventDefault();
-    applyMatrixAt(start, mat);
+    if(start){ applyMatrixAt(start, mat); }
+    else { applyMatrixReplacingTable(mat); }
+
     if(typeof focusGrid === 'function') focusGrid();
   });
 
@@ -270,19 +371,23 @@
       }
     }catch(err){
       // Minimal manual fallback
-      const manual = window.prompt('Paste tab- or comma-separated data here, then click OK:', '');
+      const manual = window.prompt('Paste tab-, comma-, semicolon-, or whitespace-separated data here, then click OK:', '');
       if(manual == null) return; // canceled
       txt = manual;
     }
     if(!txt || !txt.trim()){ alert('Clipboard is empty.'); return; }
 
     const mat = parseClipboard(txt);
-    const start = (typeof singleSelectedCell === 'function' && singleSelectedCell())
-               || (typeof firstSelectedCell === 'function' && firstSelectedCell())
-               || getCellByRowCol(0,0);
-    if(!start){ alert('Select a target cell first.'); return; }
+    const haveSelection = (typeof selectedCells !== 'undefined' && selectedCells && selectedCells.size > 0);
+    const start = haveSelection
+      ? ((typeof singleSelectedCell === 'function' && singleSelectedCell())
+          || (typeof firstSelectedCell === 'function' && firstSelectedCell())
+          || getCellByRowCol(0,0))
+      : null;
 
-    applyMatrixAt(start, mat);
+    if(start){ applyMatrixAt(start, mat); }
+    else { applyMatrixReplacingTable(mat); }
+
     if(typeof focusGrid === 'function') focusGrid();
     flash(btn);
   }

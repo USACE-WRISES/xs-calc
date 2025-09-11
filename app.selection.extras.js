@@ -1,8 +1,11 @@
-// app.selection.extras.js (REVISED)
+// app.selection.extras.js (RE-REVISED)
 // Enhances selection on #xsTable with:
 //  • Crossing window (drag-rectangle) that selects all Station/Elevation cells the box touches
 //  • Shift + click on row headers (ID col) selects all rows between
 //  • Shift + click on any cells selects all cells in rows between
+//
+// This revision ensures crossing-window drags never place a text caret in any input.
+// Caret appears only on explicit edit (typing/backspace) or on double-click.
 //
 // Requires app.ui.js (selection utilities) to be loaded first.
 
@@ -71,7 +74,7 @@
     _focusGrid();
   }
 
-  // ---- Shift + click behaviors (works already; keep here and make robust) ----
+  // ---- Shift + click behaviors ----
   tbody.addEventListener('click', (e)=>{
     const td = e.target.closest('td');
     if(!td) return;
@@ -120,6 +123,9 @@
   let suppressNextClick = false;
   let prevBodyUserSelect = '';
 
+  // Expose a tiny flag so other handlers can know a rect-selection is live (optional use)
+  window.__xsRectSelecting = false;
+
   function ensureRectDiv(){
     if(rectDiv) return rectDiv;
     rectDiv = document.createElement('div');
@@ -140,9 +146,7 @@
     const right = Math.max(x1,x2), bottom = Math.max(y1,y2);
     return { left, top, right, bottom, width:right-left, height:bottom-top };
   }
-  function intersects(a,b){
-    return !(b.left > a.right || b.right < a.left || b.top > a.bottom || b.bottom < a.top);
-  }
+  function intersects(a,b){ return !(b.left > a.right || b.right < a.left || b.top > a.bottom || b.bottom < a.top); }
   function getRect(el){ return el.getBoundingClientRect(); }
   function updateRectUI(r){
     ensureRectDiv();
@@ -170,6 +174,7 @@
     document.body.style.userSelect = 'none';
 
     rectActive = true;
+    window.__xsRectSelecting = true;
     const r = rectFromPoints(startX,startY,e.clientX,e.clientY);
     updateRectUI(r);
     updateSelectionUnderRect(r, /*live=*/true);
@@ -178,6 +183,7 @@
   function endRectangle(){
     hideRectUI();
     rectActive = false;
+    window.__xsRectSelecting = false;
     draggingPossibly = false;
     candidates = null;
     additive = false;
@@ -185,6 +191,7 @@
     document.body.style.userSelect = prevBodyUserSelect || '';
     prevBodyUserSelect = '';
     suppressNextClick = true; // swallow synthetic click
+    _focusGrid();
   }
 
   function updateSelectionUnderRect(r, live){
@@ -200,27 +207,28 @@
 
     for(const td of candidates){
       const cr = getRect(td);
-      if(intersects(r, cr)){
-        _addCellToSelection(td);
-      }
+      if(intersects(r, cr)){ _addCellToSelection(td); }
     }
-    _focusGrid();
   }
 
-  // Start tracking on any left-button press inside the table (including on INPUTs)
+  // Prevent the browser from focusing inputs on any left-button down inside the table.
+  // This guarantees no caret appears unless the user explicitly starts editing.
   document.addEventListener('mousedown', (e)=>{
     const inTable = e.target.closest('#xsTable');
     if(!inTable) return;
     if(e.button !== 0) return; // left button only
-    // Do not start rectangle immediately; wait for movement threshold.
+
+    // Preempt default focus & caret placement
+    e.preventDefault();
+
+    // Initialize drag state (we'll decide later if it's a rectangle)
     draggingPossibly = true;
     rectActive = false;
     startX = e.clientX;
     startY = e.clientY;
     startTarget = e.target;
     suppressNextClick = false;
-    // Note: do not preventDefault here so basic clicks still work if user doesn't drag.
-  }, true); // capture so we can override table's own drag once rectangle begins
+  }, true); // capture
 
   document.addEventListener('mousemove', (e)=>{
     if(!draggingPossibly) return;
@@ -252,6 +260,7 @@
       // Not enough movement: treat as a normal click; let app.ui.js handle it.
       draggingPossibly = false;
       rectActive = false;
+      window.__xsRectSelecting = false;
       startTarget = null;
     }
   }, true);
