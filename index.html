@@ -54,31 +54,7 @@
     button.clicked{animation:btnflash 180ms ease-out}
     @keyframes btnflash{0%{background:#fff}40%{background:#e9e9e9}100%{background:#fff}}
 
-    /* --- XS toolbar: keep on one line and center align --- */
-    .actions.actions-xs{
-      display:flex;
-      flex-wrap:nowrap;         /* prevent second row */
-      align-items:center;       /* vertical alignment */
-      gap:8px;
-      min-width:0;              /* allow container to shrink */
-      overflow-x:auto;          /* if space is truly too small, scroll instead of wrap */
-      -webkit-overflow-scrolling: touch;
-    }
-
-    /* Buttons in that row should not grow or shrink */
-    .actions.actions-xs > button{
-      flex:0 0 auto;            /* keep intrinsic width */
-      white-space:nowrap;       /* keep label on one line */
-      line-height:1.1;          /* consistent height */
-    }
-
-    /* Tight, equal horizontal padding for those three buttons */
-    .btn-tight{
-      padding:6px 10px !important;   /* minimal, even left/right */
-      border-radius:10px;            /* matches your style */
-    }
-
-
+    
     .labelTitle{display:flex;align-items:center;gap:6px}
     .info{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid #bcbcbc;color:#555;background:#fff;font-size:11px;line-height:1;cursor:help;user-select:none}
     .info::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:130%;width:290px;max-width:70vw;padding:8px 10px;border-radius:8px;background:rgba(20,20,20,.95);color:#fff;font-size:12px;line-height:1.35;box-shadow:0 6px 16px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:opacity .12s ease-out;z-index:1000}
@@ -602,12 +578,11 @@
         <em>Left Overbank</em>, <em>Main Channel</em>, and <em>Right Overbank</em>.
       </p>
       <div class="actions actions-xs">
-        <button id="insertRow" class="btn-tight">Insert Row</button>
-        <button id="deleteSelected" class="harmonize btn-tight">Delete Selected</button>
-        <button id="sortBtn" class="harmonize btn-tight" title="Sort stations ascending">Sort by Station</button>
-
+        <button id="insertRow">Insert Row</button>
+        <button id="deleteSelected" class="harmonize">Delete Selected</button>
+        <button id="sortBtn" class="harmonize" title="Sort stations ascending">Sort Stations</button>
         <!-- Legacy Filter button kept in DOM but hidden via CSS -->
-        <button id="openFilter" class="btnSecondary" title="Filter cross-section points">
+        <button id="openFilter" class="btnSecondary" title="Filter cross‑section points">
           <span class="ico-funnel" aria-hidden="true"></span>Filter
         </button>
       </div>
