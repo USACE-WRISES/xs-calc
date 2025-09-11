@@ -34,13 +34,22 @@
     const s1 = t.replace(/,/g,''); // allow thousands separators
     return Number.isFinite(parseFloat(s1));
   }
+  // Preserve decimal places exactly as typed, but sanitize for <input type="number">
   function normalizeNum(s){
     let t = String(s ?? '').trim();
     if(!t) return '';
-    t = t.replace(/,/g,''); // strip thousands separators
+    // normalize unicode minus and non-breaking/thin spaces
+    t = t.replace(/\u2212/g, '-').replace(/[\u00A0\u2007\u202F]/g, ' ');
+    // remove standard thousands separators (US-style)
+    t = t.replace(/,/g, '');
+    // allow forms like "12", "12.", "12.0", ".5", "-.25", "1.23e-4"
+    const valid = /^-?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(t);
+    if(valid) return t;
+    // fallback: try to parse; if ok, return minimal string (no padding)
     const v = parseFloat(t);
-    return Number.isFinite(v) ? String(v) : String(s);
+    return Number.isFinite(v) ? String(v) : '';
   }
+
 
   function getSelectionBounds(){
     if(!selectedCells || selectedCells.size===0) return null;
@@ -219,9 +228,9 @@
     tbody.innerHTML = '';
 
     // Accept rows as: [station, elevation, (optional LB/RB), (optional n)]
-    const toNum = (s)=> {
-      const v = parseFloat(String(s).replace(/,/g,'').trim());
-      return Number.isFinite(v) ? v : null;
+    const toNumStr = (s)=> {
+      const t = normalizeNum(s);
+      return t === '' ? null : t;
     };
     function asStageToken(toks){
       // Find LB/RB anywhere in the row
@@ -231,11 +240,10 @@
       }
       return '';
     }
-    function maybeN(toks){
-      // if there is an obvious numeric 'n' token beyond the first two columns, use it
+    function maybeNStr(toks){
       for(let i=2;i<toks.length;i++){
-        const v = toNum(toks[i]);
-        if(v != null) return v;
+        const t = toNumStr(toks[i]);
+        if(t != null) return t; // first valid numeric-looking token after station/elev
       }
       return '';
     }
@@ -244,18 +252,12 @@
     for(const rawRow of mat){
       if(!rawRow || !rawRow.length) continue;
       // Prefer first two numeric-looking fields for station & elevation
-      const st = toNum(rawRow[0]);
-      const el = toNum(rawRow[1]);
+      const st = toNumStr(rawRow[0]);
+      const el = toNumStr(rawRow[1]);
       if(st == null || el == null) continue;
-
       const stage = asStageToken(rawRow);
-      const nVal = maybeN(rawRow);
-      addRow(
-        Number.isFinite(+st) ? (+st).toFixed(3) : '',
-        Number.isFinite(+el) ? (+el).toFixed(3) : '',
-        stage,
-        (nVal === '' ? '' : (Number.isFinite(+nVal) ? (+nVal).toFixed(3) : ''))
-      );
+      const nVal = maybeNStr(rawRow);
+      addRow(st, el, stage, nVal);
       rowsAdded++;
     }
 
@@ -376,7 +378,7 @@
             </header>
             <div style="display:grid;gap:8px">
               <p class="small" style="margin:0 0 6px;">
-                Paste tab-, comma-, semicolon-, or whitespace-separated data below. Press <b>Ctrl/Cmd+Enter</b> to apply.
+                Paste tab-, comma-, semicolon-, or whitespace-separated data below. Click <b>OK</b> or Press <b>Ctrl/Cmd+Enter</b> to apply.
               </p>
               <textarea id="pasteText" rows="12" spellcheck="false"
                         style="width:100%;min-height:260px;border:1px solid #e0e0e0;border-radius:10px;padding:10px;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;"></textarea>

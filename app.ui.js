@@ -1016,7 +1016,7 @@ function compute(){
   const LB=pts.find(p=>p.tag==='LB')||null;
   const RB=pts.find(p=>p.tag==='RB')||null;
   if(!LB || !RB || !(LB.x<RB.x)){
-    greyOutAll('Not enough information: select exactly one LB and one RB (LB must be left of RB).');
+    greyOutAll('Select one LB and one RB (LB must be left of RB).');
     renderPlot(pts, stage, [], units, { mode:'off' });
     renderDistTable(null, units, 0, 0);
     renderConveyanceTable(null, units, null);
