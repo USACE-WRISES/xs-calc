@@ -1,5 +1,7 @@
 # 1D Cross-Section Hydraulics Calculator
 
+Launch the web app from: https://usace-wrises.github.io/xs-calc/
+
 A single-page web app that computes 1D open-channel hydraulics for a single cross-section using Manning’s equation. Open `index.html` in a modern browser, build or import a cross-section, and the app computes discharge and other metrics (or, if you specify discharge, it solves for stage/depth that conveys it).
 
 **Key Features**
