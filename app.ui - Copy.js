@@ -756,11 +756,11 @@ document.querySelectorAll('.tab').forEach(tab=>{
     const ibOn = bool('des-isInnerBerm');
     const s2 = [
       'des-s2-D2stg','des-s2-Mbanks_2stg','des-s2-Wbench_L','des-s2-Wbench_R',
-      'des-s2-Ybench_L','des-s2-Ybench_R'
+      'des-s2-Ybench_L','des-s2-Ybench_R','des-s2-Mtieout_2stg_L','des-s2-Mtieout_2stg_R'
     ];
     const s3 = [
       'des-s3-D3stg','des-s3-Mbanks_3stg','des-s3-W3rdstage_L','des-s3-W3rdstage_R',
-      'des-s3-y3rdStage_L','des-s3-y3rdStage_R'
+      'des-s3-y3rdStage_L','des-s3-y3rdStage_R','des-s3-Mtieout_3stg_L','des-s3-Mtieout_3stg_R'
     ];
     const ib = ['des-ib-WIB','des-ib-DmaxIB'];
     setDisabled(s2, nStages<2);
@@ -779,6 +779,8 @@ document.querySelectorAll('.tab').forEach(tab=>{
         mbanks: nval('des-s1-mbanks'),
         ybed: nval('des-s1-ybed'),
         thalweg_shift: nval('des-s1-thalweg_shift'),
+        Mtieout_L: nval('des-s1-Mtieout_L'),
+        Mtieout_R: nval('des-s1-Mtieout_R'),
         Roundness: nval('des-s1-Roundness')
       },
       stage2: {
@@ -787,7 +789,9 @@ document.querySelectorAll('.tab').forEach(tab=>{
         Wbench_L: nval('des-s2-Wbench_L'),
         Wbench_R: nval('des-s2-Wbench_R'),
         Ybench_L: nval('des-s2-Ybench_L'),
-        Ybench_R: nval('des-s2-Ybench_R')
+        Ybench_R: nval('des-s2-Ybench_R'),
+        Mtieout_2stg_L: nval('des-s2-Mtieout_2stg_L'),
+        Mtieout_2stg_R: nval('des-s2-Mtieout_2stg_R')
       },
       stage3: {
         D3stg: nval('des-s3-D3stg'),
@@ -795,7 +799,9 @@ document.querySelectorAll('.tab').forEach(tab=>{
         W3rdstage_L: nval('des-s3-W3rdstage_L'),
         W3rdstage_R: nval('des-s3-W3rdstage_R'),
         y3rdStage_L: nval('des-s3-y3rdStage_L'),
-        y3rdStage_R: nval('des-s3-y3rdStage_R')
+        y3rdStage_R: nval('des-s3-y3rdStage_R'),
+        Mtieout_3stg_L: nval('des-s3-Mtieout_3stg_L'),
+        Mtieout_3stg_R: nval('des-s3-Mtieout_3stg_R')
       },
       innerBerm: {
         WIB: nval('des-ib-WIB'),
@@ -809,9 +815,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
         Left_BKF_Bottom_Slope_Multiplier: nval('des-adv-Left_BKF_Bottom_Slope_Multiplier'),
         Right_BKF_Bottom_Slope_Multiplier: nval('des-adv-Right_BKF_Bottom_Slope_Multiplier'),
         X_datum: nval('des-adv-X_datum'),
-        Y_datum: nval('des-adv-Y_datum'),
-        Tieout_L: nval('des-adv-Tieout_L'),
-        Tieout_R: nval('des-adv-Tieout_R')
+        Y_datum: nval('des-adv-Y_datum')
       }
     };
   }
@@ -900,8 +904,11 @@ document.querySelectorAll('.tab').forEach(tab=>{
       const dLeft = dPts[0], dRight = dPts[dPts.length-1];
 
       // Choose tie-out slopes from the stage count
-      const mL = params.advanced?.Tieout_L;
-      const mR = params.advanced?.Tieout_R;
+      const ns = String(params.numStages||'1');
+      let mL=null, mR=null;
+      if(ns==='1'){ mL=params.stage1?.Mtieout_L; mR=params.stage1?.Mtieout_R; }
+      else if(ns==='2'){ mL=params.stage2?.Mtieout_2stg_L; mR=params.stage2?.Mtieout_2stg_R; }
+      else { mL=params.stage3?.Mtieout_3stg_L; mR=params.stage3?.Mtieout_3stg_R; }
 
       const bed = getPointsWithStagesRaw().slice().sort((a,b)=>a.x-b.x).map(p=>({x:p.x,z:p.z}));
 
@@ -930,8 +937,11 @@ document.querySelectorAll('.tab').forEach(tab=>{
         const bedRaw = getPointsWithStagesRaw().slice().sort((a,b)=>a.x-b.x);
         if(bedRaw.length<2){ applyDesignerRowsToXsTable(rows); return; }
 
-        const mL = params.advanced?.Tieout_L;
-      const mR = params.advanced?.Tieout_R;
+        const ns = String(params.numStages||'1');
+        let mL=null, mR=null;
+        if(ns==='1'){ mL=params.stage1?.Mtieout_L; mR=params.stage1?.Mtieout_R; }
+        else if(ns==='2'){ mL=params.stage2?.Mtieout_2stg_L; mR=params.stage2?.Mtieout_2stg_R; }
+        else { mL=params.stage3?.Mtieout_3stg_L; mR=params.stage3?.Mtieout_3stg_R; }
 
         const dLeft = design[0], dRight = design[design.length-1];
 

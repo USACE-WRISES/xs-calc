@@ -1,4 +1,3 @@
-/* UPDATE 2025-10-02: Tie‑out slopes (Left/Right) are now provided via params.advanced.Tieout_L and params.advanced.Tieout_R as dimensionless L/L ratios. This calculator does not consume tie‑out values directly; merging logic in app.ui.js uses them to splice the design into the existing bed. */
 /* Cross-Section Designer calculator (extracted)
    Provides global `calculateCrossSection(params)` that returns 19 rows. */
 (function(global){
