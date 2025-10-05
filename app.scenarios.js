@@ -1,20 +1,22 @@
 // app.scenarios.js
-// Left dock: scenario manager for cross-section state (session-only).
-// - Labeling: "Scenarios", header button "Add"
-// - Rename uses pencil icon; delete uses "X" icon; duplicate uses overlapping-squares icon
-// - Row buttons act on THAT scenario row (not just the active one)
-// - Persistence: sessionStorage (clears when tab/window closes)
-// - Pencil icon restored to 18px but slightly shortened so both tip and end are clearly visible.
+// Scenario manager with scenario-scoped HCS + Designer, immediate autosave on edits,
+// and safe apply (autosave suspended while switching).
 //
-// Depends on app.core.js + app.ui.js for reading/applying UI state and compute().
-// (Also interacts with the Designer UI & helpers in app.ui.js.)
+// - "Add" creates a NEW scenario from a clean template (not a copy)
+// - Rename uses pencil; duplicate uses overlapping squares; delete uses "X"
+// - Session persistence via sessionStorage (clears when tab/window closes)
+// - Robust autosave hooks on Setup, XS grid, HCS, and Designer panels
+//
+// Depends on: app.core.js + app.ui.js + designer calculator wiring in app.ui.js.
+// Uses HCS globals defined in app.ui.js: ineffectiveAreas, obstructions, levees,
+// and their renderers: renderIFATable(), renderObsTable(), renderLevTable().
 
 (function () {
   // ---------- Persistence (session only) ----------
   const SS_KEY = 'xsScenarios.session.v1';
-  const STORAGE = window.sessionStorage; // clears on tab/window close
+  const STORAGE = window.sessionStorage;
 
-  // ---------- Styles ----------
+  // ---------- Styles (dock) ----------
   const CSS = `
     :root { --dockW: 252px; }
     @media (min-width: 1080px){
@@ -38,8 +40,6 @@
     #scenarioDock li.active{ border-color:#0b57d0; box-shadow:0 0 0 2px rgba(11,87,208,.10) inset; }
     #scenarioDock .name{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     #scenarioDock .rowBtns{ display:flex; gap:6px; }
-
-    /* Icon-only tiny buttons (lighter strokes for subtle look) */
     #scenarioDock .iconTiny{
       width:28px; height:28px; padding:0; display:inline-flex; align-items:center; justify-content:center;
       border:1px solid var(--border); border-radius:8px; background:#fff; line-height:1;
@@ -50,7 +50,6 @@
     #scenarioDock .iconTiny svg *{
       fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;
     }
-
     #scenarioDock .ghost{ color:#999; font-size:.92rem; }
   `;
 
@@ -58,8 +57,93 @@
   const $ = (sel) => document.querySelector(sel);
   const clone = (o) => JSON.parse(JSON.stringify(o));
   const nowISO = () => new Date().toISOString();
+  function freshLevees() {
+    return { left:{enabled:false, station:null, crest:null}, right:{enabled:false, station:null, crest:null} };
+  }
 
-  // ---------- UI <-> Scenario bridges (Setup, XS, HCS, Designer) ----------
+  // Guard to avoid autosaving while applying a scenario to the UI
+  let AUTOSAVE_SUSPENDED = false;
+  function withAutosaveSuspended(fn){
+    const prev = AUTOSAVE_SUSPENDED;
+    AUTOSAVE_SUSPENDED = true;
+    try { fn(); } finally { AUTOSAVE_SUSPENDED = prev; }
+  }
+
+  // ---------- DEFAULTS (for "Add") ----------
+  function templateScenario(name) {
+    const id = crypto.randomUUID();
+
+    // Setup defaults align with Reset Example in app.ui.js. :contentReference[oaicite:2]{index=2}
+    const setup = {
+      units: 'US',
+      slope: 0.001,
+      nLOB: 0.100,
+      nMC:  0.035,
+      nROB: 0.100,
+      depth: 2.5,
+      specifyQ: false,
+      discharge: 0,
+      hvnOn: false,
+      N_LOB: 1, N_CHAN: 1, N_ROB: 1,
+      plotMode: 'off'
+    };
+
+    // Reset Example cross-section (stations/elevations). :contentReference[oaicite:3]{index=3}
+    const xs = [
+      {x:-40, z:3,   tag:'',   n:null},
+      {x:-10, z:2,   tag:'LB', n:null},
+      {x:-5.5,z:0.5, tag:'',   n:null},
+      {x:0,   z:0,   tag:'',   n:null},
+      {x:5.5, z:0.5, tag:'',   n:null},
+      {x:10,  z:2,   tag:'RB', n:null},
+      {x:40,  z:3,   tag:'',   n:null}
+    ];
+
+    // HCS starts empty. (Arrays/objects are per-scenario snapshots.)
+    const hcs = {
+      ineffectiveAreas: [],
+      obstructions: [],
+      levees: freshLevees()
+    };
+
+    // Designer panel defaults (matches your panel’s initial state/IDs). :contentReference[oaicite:4]{index=4}
+    const designer = {
+      mergeMode: 'replace',
+      autoApply: false,
+      numStages: 1,
+      stage1: {
+        Width: 20, Depth: 2, mbanks: 2, ybed: 0.5, thalweg_shift: 0,
+        Mtieout_L: 3, Mtieout_R: 3, Roundness: 0
+      },
+      stage2: {
+        D2stg: 2, Mbanks_2stg: 2,
+        Wbench_L: 10, Wbench_R: 10,
+        Ybench_L: 0.2, Ybench_R: 0.2,
+        Mtieout_2stg_L: 3, Mtieout_2stg_R: 3
+      },
+      stage3: {
+        D3stg: 0.5, Mbanks_3stg: 2,
+        W3rdstage_L: 10, W3rdstage_R: 10,
+        y3rdStage_L: 0.2, y3rdStage_R: 0.2,
+        Mtieout_3stg_L: 3, Mtieout_3stg_R: 3
+      },
+      advanced: {
+        Left_BKF_Height_Multiplier: 1,
+        Right_BKF_Height_Multiplier: 1,
+        Left_Mbanks_BKF_Multiplier: 1,
+        Right_Mbanks_BKF_Multiplier: 1,
+        Left_BKF_Bottom_Slope_Multiplier: 1,
+        Right_BKF_Bottom_Slope_Multiplier: 1,
+        X_datum: 0, Y_datum: 0
+      },
+      isInnerBerm: !!document.getElementById('des-isInnerBerm')?.checked,
+      innerBerm: { WIB: null, DmaxIB: null }
+    };
+
+    return { id, name: name || 'Scenario', setup, xs, hcs, designer, updatedAt: nowISO() };
+  }
+
+  // ---------- UI <-> Scenario bridges ----------
   function readSetupFromUI() {
     const val = (id) => document.getElementById(id)?.value ?? '';
     const num = (id) => { const v = parseFloat(val(id)); return Number.isFinite(v) ? v : null; };
@@ -128,34 +212,54 @@
     if (typeof window.clearCellSelection === 'function') window.clearCellSelection();
   }
 
-  // ---- HCS: FIX — use real globals (not window.*) ----
+  // ---------- HCS (scenario-scoped) ----------
+  // NOTE: these map exactly to app.ui.js globals/renderers. :contentReference[oaicite:5]{index=5}
   function readHcsFromUI() {
-    // The following are declared as top-level `let` in app.ui.js (not window props). :contentReference[oaicite:2]{index=2}
-    const ia = (typeof ineffectiveAreas !== 'undefined' && Array.isArray(ineffectiveAreas)) ? clone(ineffectiveAreas) : [];
-    const obs = (typeof obstructions     !== 'undefined' && Array.isArray(obstructions))     ? clone(obstructions)     : [];
-    const lev = (typeof levees           !== 'undefined' && levees)                          ? clone(levees)           : { left:{enabled:false}, right:{enabled:false} };
-    return { ineffectiveAreas: ia, obstructions: obs, levees: lev };
+    if (typeof window.getHcsState === 'function') {
+      const state = window.getHcsState() || {};
+      return {
+        ineffectiveAreas: Array.isArray(state.ineffectiveAreas) ? clone(state.ineffectiveAreas) : [],
+        obstructions: Array.isArray(state.obstructions) ? clone(state.obstructions) : [],
+        levees: state.levees && typeof state.levees === 'object' ? clone(state.levees) : freshLevees()
+      };
+    }
+    return {
+      ineffectiveAreas: (window.ineffectiveAreas ? clone(window.ineffectiveAreas) : []),
+      obstructions:     (window.obstructions     ? clone(window.obstructions)     : []),
+      levees:           (window.levees           ? clone(window.levees)           : freshLevees())
+    };
+  }
+  function hardResetHcsGlobals(){
+    if (typeof window.setHcsState === 'function') {
+      window.setHcsState({ ineffectiveAreas: [], obstructions: [], levees: freshLevees() });
+    } else {
+      window.ineffectiveAreas = [];
+      window.obstructions = [];
+      window.levees = freshLevees();
+    }
   }
   function applyHcsToUI(hcs) {
-    if (!hcs) return;
-    // Assign back to the real variables that app.ui.js uses and renders. :contentReference[oaicite:3]{index=3}
-    if ('ineffectiveAreas' in hcs) { try { ineffectiveAreas = clone(hcs.ineffectiveAreas || []); } catch(_){} }
-    if ('obstructions'     in hcs) { try { obstructions     = clone(hcs.obstructions     || []); } catch(_){} }
-    if ('levees'           in hcs) { try { levees           = clone(hcs.levees           || { left:{enabled:false}, right:{enabled:false} }); } catch(_){} }
+    const src = hcs || { ineffectiveAreas: [], obstructions: [], levees: freshLevees() };
+    if (typeof window.setHcsState === 'function') {
+      window.setHcsState(src);
+      return;
+    }
+    // Replace the UI globals with deep clones to avoid shared references across scenarios.
+    window.ineffectiveAreas = Array.isArray(src.ineffectiveAreas) ? clone(src.ineffectiveAreas) : [];
+    window.obstructions     = Array.isArray(src.obstructions)     ? clone(src.obstructions)     : [];
+    window.levees           = src.levees && typeof src.levees==='object' ? clone(src.levees)    : freshLevees();
+
     if (typeof window.renderIFATable === 'function') window.renderIFATable();
     if (typeof window.renderObsTable === 'function') window.renderObsTable();
     if (typeof window.renderLevTable === 'function') window.renderLevTable();
   }
 
-  // ---- Designer <-> Scenario bridge ----
-  // Uses the exact ids present in index.html under the "Designer" tab. :contentReference[oaicite:4]{index=4}
+  // ---------- Designer (scenario-scoped) ----------
   function readDesignerFromUI() {
     const val = (id) => document.getElementById(id)?.value ?? '';
     const num = (id) => {
-      const el = document.getElementById(id);
-      if (!el) return null;
-      const v = parseFloat(el.value);
-      return Number.isFinite(v) ? v : null;
+      const el = document.getElementById(id); if (!el) return null;
+      const v = parseFloat(el.value); return Number.isFinite(v) ? v : null;
     };
     const bool = (id) => !!document.getElementById(id)?.checked;
 
@@ -208,7 +312,6 @@
         Y_datum:                              num('des-adv-Y_datum')
       },
 
-      // Optional (not always present in current HTML; read safely)
       isInnerBerm: !!document.getElementById('des-isInnerBerm')?.checked,
       innerBerm: {
         WIB:    num('des-ib-WIB'),
@@ -223,7 +326,6 @@
     const setValNum = (id, v) => { const el = document.getElementById(id); if (el) el.value = (v == null ? '' : v); };
     const setChk = (id, on) => { const el = document.getElementById(id); if (el) el.checked = !!on; };
 
-    // High-level
     setVal('des-numStages', String(d.numStages || 1));
 
     // Stage 1
@@ -266,12 +368,12 @@
     setValNum('des-adv-X_datum', d.advanced?.X_datum);
     setValNum('des-adv-Y_datum', d.advanced?.Y_datum);
 
-    // Optional Inner Berm (only if these exist in DOM)
+    // Optional Inner Berm
     if (document.getElementById('des-isInnerBerm')) setChk('des-isInnerBerm', !!d.isInnerBerm);
     if (document.getElementById('des-ib-WIB'))     setValNum('des-ib-WIB', d.innerBerm?.WIB);
     if (document.getElementById('des-ib-DmaxIB'))  setValNum('des-ib-DmaxIB', d.innerBerm?.DmaxIB);
 
-    // Merge/Replace UI + hidden value (keep UI and runtime mode in sync)
+    // Merge/Replace UI + hidden value
     const mode = (d.mergeMode === 'merge') ? 'merge' : 'replace';
     const rReplace = document.getElementById('mergeReplace');
     const rMerge   = document.getElementById('mergeMerge');
@@ -281,37 +383,42 @@
       rReplace.checked = (mode === 'replace');
       rMerge.checked   = (mode === 'merge');
     }
-    // Keep Designer runtime in sync for preview without firing change handlers
     if (typeof window !== 'undefined') {
-      window.__designerMergeMode = mode; // used by preview overlay
+      window.__designerMergeMode = mode;
     }
 
-    // Auto-apply: set the checkbox without firing change (we don’t want to re-write XS on scenario switch)
+    // Auto-apply checkbox
     setChk('designerAutoApply', !!d.autoApply);
     if (typeof window.updateXsLockFromAutoToggle === 'function') window.updateXsLockFromAutoToggle();
 
-    // Let the Designer panel update enabled/disabled states & preview:
     if (typeof window.refreshDesignPreview === 'function') window.refreshDesignPreview();
   }
 
+  // ---------- Snapshot & Apply a whole scenario ----------
   function captureScenarioFromUI(scen) {
     return {
       id: scen?.id || crypto.randomUUID(),
       name: scen?.name || 'Scenario',
       setup: readSetupFromUI(),
       xs: readXsFromUI(),
-      hcs: readHcsFromUI(),     // <-- fixed to capture real HCS data
+      hcs: readHcsFromUI(),
       designer: readDesignerFromUI(),
       updatedAt: nowISO()
     };
   }
   function applyScenarioToUI(scen) {
     if (!scen) return;
-    applySetupToUI(scen.setup);
-    // Designer first so auto-apply doesn’t clobber XS on switch
-    applyDesignerToUI(scen.designer);
-    applyHcsToUI(scen.hcs);    // <-- fixed to apply to real HCS vars + re-render
-    applyXsToUI(scen.xs);
+    withAutosaveSuspended(() => {
+      // Setup first
+      applySetupToUI(scen.setup);
+      // Designer BEFORE XS so “Auto-apply” locks are consistent
+      applyDesignerToUI(scen.designer);
+      // HCS: reset then apply
+      hardResetHcsGlobals();
+      applyHcsToUI(scen.hcs);
+      // XS last
+      applyXsToUI(scen.xs);
+    });
     if (typeof window.compute === 'function') window.compute();
   }
 
@@ -345,46 +452,25 @@
       if (i >= 0) this.scenarios[i] = s; else this.scenarios.push(s);
       this.save();
     },
-    addLikeCurrent() {
-      const base = this.active() || this.scenarios[0] || null;
-      const snap = captureScenarioFromUI(base);
-      snap.id = crypto.randomUUID();
-      snap.name = nextScenarioName();
+
+    addFromTemplate() {
+      // Persist the current one first
+      if (this.activeId) {
+        const snap = captureScenarioFromUI(this.active());
+        this.upsert(snap);
+      }
+      const snap = templateScenario(nextScenarioName());
       this.scenarios.push(snap);
       this.activeId = snap.id;
       this.save();
       renderDock();
       applyScenarioToUI(snap);
     },
-    removeById(id) {
-      const idx = this.scenarios.findIndex(s => s.id === id);
-      if (idx < 0) return;
-      const wasActive = (this.activeId === id);
-      this.scenarios.splice(idx, 1);
 
-      if (!this.scenarios.length) {
-        // Keep at least one
-        const fresh = captureScenarioFromUI({ name:'Scenario 1' });
-        this.scenarios.push(fresh);
-        this.activeId = fresh.id;
-        applyScenarioToUI(fresh);
-      } else if (wasActive) {
-        const next = this.scenarios[Math.max(0, idx - 1)];
-        this.activeId = next.id;
-        applyScenarioToUI(next);
-      }
-      this.save();
-      renderDock();
-    },
-    rename(id, newName) {
-      const s = this.scenarios.find(it => it.id === id);
-      if (s) { s.name = String(newName || '').trim() || s.name; this.save(); renderDock(); }
-    },
     duplicateFromId(id) {
       const src = this.scenarios.find(it => it.id === id);
       if (!src) return;
 
-      // If duplicating the *active* one, capture latest UI first so we copy fresh state
       if (this.activeId === id) {
         const snapActive = captureScenarioFromUI(src);
         this.upsert(snapActive);
@@ -400,6 +486,31 @@
       this.save();
       renderDock();
       applyScenarioToUI(copy);
+    },
+
+    removeById(id) {
+      const idx = this.scenarios.findIndex(s => s.id === id);
+      if (idx < 0) return;
+      const wasActive = (this.activeId === id);
+      this.scenarios.splice(idx, 1);
+
+      if (!this.scenarios.length) {
+        const fresh = templateScenario('Scenario 1');
+        this.scenarios.push(fresh);
+        this.activeId = fresh.id;
+        applyScenarioToUI(fresh);
+      } else if (wasActive) {
+        const next = this.scenarios[Math.max(0, idx - 1)];
+        this.activeId = next.id;
+        applyScenarioToUI(next);
+      }
+      this.save();
+      renderDock();
+    },
+
+    rename(id, newName) {
+      const s = this.scenarios.find(it => it.id === id);
+      if (s) { s.name = String(newName || '').trim() || s.name; this.save(); renderDock(); }
     }
   };
 
@@ -411,9 +522,8 @@
     return base + n;
   }
 
-  // ---------- Icons ----------
+  // ---------- Icons (dock) ----------
   function pencilSvg() {
-    // 18px box, slightly shortened so tip & eraser remain visible.
     const el = document.createElement('span');
     el.innerHTML = `
       <svg class="ico-pencil" viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img">
@@ -425,7 +535,6 @@
     return el.firstElementChild;
   }
   function duplicateSvg(){
-    // Two overlapping rounded squares
     const el = document.createElement('span');
     el.innerHTML = `
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img">
@@ -481,7 +590,6 @@
       btnDel.setAttribute('aria-label', 'Delete scenario');
       btnDel.appendChild(xSvg());
 
-      // Order: Edit (pencil), Duplicate, Delete (X)
       btns.appendChild(btnRen);
       btns.appendChild(btnDup);
       btns.appendChild(btnDel);
@@ -490,7 +598,6 @@
       li.appendChild(btns);
       list.appendChild(li);
 
-      // Rename (dblclick on name or click pencil)
       function doRename() {
         const nn = prompt('Rename scenario', s.name);
         if (nn != null) Store.rename(s.id, nn);
@@ -498,19 +605,17 @@
       name.addEventListener('dblclick', doRename);
       btnRen.addEventListener('click', (e) => { e.stopPropagation(); doRename(); });
 
-      // Duplicate THIS scenario row
       btnDup.addEventListener('click', (e) => {
         e.stopPropagation();
         Store.duplicateFromId(s.id);
       });
 
-      // Delete THIS scenario row
       btnDel.addEventListener('click', (e) => {
         e.stopPropagation();
         if (confirm(`Delete "${s.name}"?`)) Store.removeById(s.id);
       });
 
-      // Activate on row click (not on inner buttons)
+      // Activate on row click (save current first)
       li.addEventListener('click', (e) => {
         if (e.target.closest('button')) return;
         if (s.id === Store.activeId) return;
@@ -526,11 +631,10 @@
 
   function ensureDock() {
     if (document.getElementById('scenarioDock')) return;
-    // Style
     const st = document.createElement('style');
     st.textContent = CSS;
     document.head.appendChild(st);
-    // Dock
+
     const dock = document.createElement('aside');
     dock.id = 'scenarioDock';
     dock.innerHTML = `
@@ -545,19 +649,29 @@
     `;
     document.body.appendChild(dock);
 
-    document.getElementById('scenarioAdd').addEventListener('click', () => Store.addLikeCurrent());
+    // "Add" => fresh template
+    document.getElementById('scenarioAdd').addEventListener('click', () => Store.addFromTemplate());
   }
 
-  // ---------- Autosave (debounced) ----------
+  // ---------- Autosave (debounced + immediate) ----------
   let saveTimer = null;
   function debouncedAutosave() {
+    if (AUTOSAVE_SUSPENDED) return;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
       if (!Store.activeId) return;
       const snap = captureScenarioFromUI(Store.active());
       Store.upsert(snap);
-    }, 200);
+    }, 160);
   }
+  function immediateAutosave() {
+    if (AUTOSAVE_SUSPENDED) return;
+    if (!Store.activeId) return;
+    const snap = captureScenarioFromUI(Store.active());
+    Store.upsert(snap);
+  }
+
+  // Wrap compute() so any path that calls compute triggers a save. :contentReference[oaicite:6]{index=6}
   function wrapComputeForAutosave() {
     const orig = window.compute;
     if (typeof orig === 'function') {
@@ -569,14 +683,40 @@
     }
   }
 
+  // Extra: listen on HCS panel for all mutating actions, not just input/change.
+  let autosaveHooksInstalled = false;
+  function installAutosaveHooksOnce() {
+    if (autosaveHooksInstalled) return;
+    autosaveHooksInstalled = true;
+
+    function attach(sel, types){
+      const el = document.querySelector(sel);
+      if (!el) return;
+      types.forEach(type => el.addEventListener(type, () => {
+        // Save fast for HCS to keep each scenario isolated
+        if (sel === '#tab-hcs') {
+          immediateAutosave();
+        } else {
+          debouncedAutosave();
+        }
+      }, true /* capture - survive re-renders */));
+    }
+
+    // Setup / XS / Designer still use debounce; HCS uses immediate too on clicks.
+    attach('#tab-setup',     ['input','change']);
+    attach('#xsTable',       ['input','change']);
+    attach('#tab-designer',  ['input','change']);
+    attach('#tab-hcs',       ['input','change','click']); // <- includes Add/Del buttons in HCS
+  }
+
   // ---------- Boot ----------
   function initScenarios() {
     ensureDock();
 
-    // Always reset any stored scenarios so a page refresh starts clean
+    // Start clean each page refresh (session-only app)
     try { STORAGE.removeItem(SS_KEY); } catch (_) { /* ignore */ }
 
-    // Load from session or seed from current UI as "Scenario 1"
+    // Seed from current UI as "Scenario 1"
     if (!Store.load()) {
       const first = captureScenarioFromUI({ name: 'Scenario 1' });
       Store.scenarios = [first];
@@ -586,8 +726,8 @@
     renderDock();
     applyScenarioToUI(Store.active());
 
-    // Persist active scenario after each compute() run
     wrapComputeForAutosave();
+    installAutosaveHooksOnce();
   }
 
   if (document.readyState === 'loading') {
@@ -596,6 +736,6 @@
     initScenarios();
   }
 
-  // Optional debug
+  // Expose for debugging if needed
   window.__Scenarios = Store;
 })();

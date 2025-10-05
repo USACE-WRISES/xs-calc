@@ -24,9 +24,16 @@
       "R5":"Bankfull/Design","R6":"End of bankfull/design bench","R7":"3rd Stage","R8":"End of 3rd stage bench","R9":"3rd Stage Top Bank"
     };
 
-    const s1 = params.stage1, s2 = params.stage2, s3 = params.stage3, ib = {...params.innerBerm}, adv = params.advanced;
+    const s1 = params.stage1 || {};
+    const s2 = params.stage2 || {};
+    const s3 = params.stage3 || {};
+    const ib = {...(params.innerBerm || {})};
+    const adv = params.advanced || {};
     const isIB = !!params.isInnerBerm;
     const ns = String(params.numStages ?? "3");
+
+    // Guard some scalars
+    s1.Roundness = Number.isFinite(s1.Roundness) ? s1.Roundness : 0;
 
     // Init coord vars
     let L1x=0,L2x=0,L3x=0,L4x=0,L5x=0,L6x=0,L7x=0,L8x=0,L9x=0;
@@ -36,6 +43,10 @@
     let L1y=0,L2y=0,L3y=0,L4y=0,L5y=0,L6y=0,L7y=0,L8y=0,L9y=0;
     let R1y=0,R2y=0,R3y=0,R4y=0,R5y=0,R6y=0,R7y=0,R8y=0,R9y=0;
     let CLy=0;
+
+    // Always build the base geometry about CLx=0
+    // Later we will add thalweg_shift only to the inner 7 points (L3..R3).
+    const tShift = Number.isFinite(s1.thalweg_shift) ? s1.thalweg_shift : 0;
 
     if (isIB){
       // --- WITH INNER BERM ---
@@ -73,35 +84,28 @@
       const S3stg_bench_R = safeDiv(s3.y3rdStage_R, s3.W3rdstage_R);
       const S3stg_bench_L = safeDiv(s3.y3rdStage_L, s3.W3rdstage_L);
 
-      // X (Station)
-      CLx = s1.thalweg_shift + adv.X_datum;
+      // X (Station) — build about CLx = 0
+      CLx = 0; // base
 
-      // Left side
+      // Left side (inner -> outer)
       L1x = -EPS + CLx;
       L2x = (-0.25 * ib.WIB) + L1x;
       L3x = (-0.25 * ib.WIB) + L2x;
 
-      if (s1.thalweg_shift !== 0){
-        L4x = ((-0.5 * Wbed) - ((-0.25 * ib.WIB) + (-0.25 * ib.WIB)) - s1.thalweg_shift) + L3x;
-      }else{
-        L4x = ((-0.5 * Wbed) - ((-0.25 * ib.WIB) + (-0.25 * ib.WIB))) + L3x;
-      }
+      // IMPORTANT: do NOT include thalweg_shift in L4..R4 base geometry
+      L4x = ((-0.5 * Wbed) - ((-0.25 * ib.WIB) + (-0.25 * ib.WIB))) + L3x; // simplifies to L1x - 0.5*Wbed
       L5x = -((s1.mbanks * adv.Left_Mbanks_BKF_Multiplier) * (dYbanks * adv.Left_BKF_Height_Multiplier)) + L4x;
       L6x = -s2.Wbench_L + L5x;
       L7x = -W2s_bk_L + L6x;
       L8x = -s3.W3rdstage_L + L7x;
       L9x = -W3s_bk_L + L8x;
 
-      // Right side
+      // Right side (inner -> outer)
       R1x = EPS + CLx;
       R2x = (0.25 * ib.WIB) + R1x;
       R3x = (0.25 * ib.WIB) + R2x;
 
-      if (s1.thalweg_shift !== 0){
-        R4x = ((0.5 * Wbed) - ((0.25 * ib.WIB) + (0.25 * ib.WIB)) - s1.thalweg_shift) + R3x;
-      }else{
-        R4x = ((0.5 * Wbed) - ((0.25 * ib.WIB) + (0.25 * ib.WIB))) + R3x;
-      }
+      R4x = ((0.5 * Wbed) - ((0.25 * ib.WIB) + (0.25 * ib.WIB))) + R3x; // simplifies to R1x + 0.5*Wbed
       R5x = ((s1.mbanks * adv.Right_Mbanks_BKF_Multiplier) * (dYbanks * adv.Right_BKF_Height_Multiplier)) + R4x;
       R6x = s2.Wbench_R + R5x;
       R7x = W2s_bk_R + R6x;
@@ -109,7 +113,7 @@
       R9x = W3s_bk_R + R8x;
 
       // Y (Elevation)
-      CLy = 0 + adv.Y_datum;
+      CLy = 0 + (adv.Y_datum || 0);
       const temphalfDibPrevH = (ib.DmaxIB / 2) - EPS;
       const tempDmaxib = ib.DmaxIB - temphalfDibPrevH;
 
@@ -157,19 +161,16 @@
       const W3s_bk_R = s3.Mbanks_3stg * D3s_bk_R;
       const W3s_bk_L = s3.Mbanks_3stg * D3s_bk_L;
 
-      // X (Station)
-      CLx = s1.thalweg_shift + adv.X_datum;
+      // X (Station) — build about CLx = 0
+      CLx = 0; // base
 
-      // Left
+      // Left (inner -> outer)
       L1x = -EPS + CLx;
-      L2x = (-(-0.25 + (-0.25 * s1.Roundness)) * (L1x + CLx - (0.5 * Wbed))) + L1x;
-      L3x = -0.25 * (CLx + (0.5 * Wbed)) + L2x;
+      L2x = (-(-0.25 + (-0.25 * s1.Roundness)) * ((L1x - CLx) - (0.5 * Wbed))) + L1x;
+      L3x = -0.25 * (0.5 * Wbed) + L2x;
 
-      if (s1.thalweg_shift !== 0){
-        L4x = ((-0.25 + (-0.25 * Math.abs(s1.Roundness - 1))) * ((0.5 * Wbed) + s1.thalweg_shift)) + L3x;
-      }else{
-        L4x = ((-0.25 + (-0.25 * Math.abs(s1.Roundness - 1))) * (0.5 * Wbed)) + L3x;
-      }
+      // No thalweg in L4 base
+      L4x = ((-0.25 + (-0.25 * Math.abs(s1.Roundness - 1))) * (0.5 * Wbed)) + L3x;
 
       L5x = -((s1.mbanks * adv.Left_Mbanks_BKF_Multiplier) * (dYbanks * adv.Left_BKF_Height_Multiplier)) + L4x;
       L6x = -s2.Wbench_L + L5x;
@@ -177,16 +178,13 @@
       L8x = -s3.W3rdstage_L + L7x;
       L9x = -W3s_bk_L + L8x;
 
-      // Right
+      // Right (inner -> outer)
       R1x = EPS + CLx;
-      R2x = ((0.25 + (0.25 * s1.Roundness)) * (R1x + CLx + (0.5 * Wbed))) + R1x;
-      R3x = 0.25 * ((0.5 * Wbed) - s1.thalweg_shift) + R2x;
+      R2x = ((0.25 + (0.25 * s1.Roundness)) * ((R1x - CLx) + (0.5 * Wbed))) + R1x;
+      R3x = 0.25 * (0.5 * Wbed) + R2x;
 
-      if (s1.thalweg_shift !== 0){
-        R4x = ((0.25 + (0.25 * Math.abs(s1.Roundness - 1))) * ((0.5 * Wbed) - s1.thalweg_shift)) + R3x;
-      }else{
-        R4x = ((0.25 + (0.25 * Math.abs(s1.Roundness - 1))) * (0.5 * Wbed)) + R3x;
-      }
+      // No thalweg in R4 base
+      R4x = ((0.25 + (0.25 * Math.abs(s1.Roundness - 1))) * (0.5 * Wbed)) + R3x;
 
       R5x = ((s1.mbanks * adv.Right_Mbanks_BKF_Multiplier) * (dYbanks * adv.Right_BKF_Height_Multiplier)) + R4x;
       R6x = s2.Wbench_R + R5x;
@@ -195,7 +193,7 @@
       R9x = W3s_bk_R + R8x;
 
       // Y (Elevation)
-      CLy = 0 + adv.Y_datum;
+      CLy = 0 + (adv.Y_datum || 0);
 
       L1y = (EPS * adv.Left_BKF_Bottom_Slope_Multiplier) + CLy;
       L2y = (0.25 * s1.ybed * adv.Left_BKF_Bottom_Slope_Multiplier) + L1y;
@@ -231,8 +229,15 @@
       }
     }
 
-    // Assemble arrays and round
-    const xPoints = [L9x,L8x,L7x,L6x,L5x,L4x,L3x,L2x,L1x,CLx,R1x,R2x,R3x,R4x,R5x,R6x,R7x,R8x,R9x].map(round2);
+    // ----- Apply thalweg/centerline shift ONLY to inner 7 points -----
+    // Order in xRaw matches names[]: [L9..L4, L3, L2, L1, CL, R1, R2, R3, R4..R9]
+    const xRaw = [L9x,L8x,L7x,L6x,L5x,L4x,L3x,L2x,L1x,CLx,R1x,R2x,R3x,R4x,R5x,R6x,R7x,R8x,R9x];
+    const thalwegStart = 6; // index of L3
+    const thalwegEnd   = 12; // index of R3
+    const xShifted = xRaw.map((v,i) => (i>=thalwegStart && i<=thalwegEnd) ? (v + tShift) : v);
+
+    // Assemble arrays and round; X_datum is a pure translation for *all* 19 points
+    const xPoints = xShifted.map(v => round2(v + (adv.X_datum || 0)));
     const yPoints = [L9y,L8y,L7y,L6y,L5y,L4y,L3y,L2y,L1y,CLy,R1y,R2y,R3y,R4y,R5y,R6y,R7y,R8y,R9y].map(round2);
 
     // Stage labels (exactly as in C#)
@@ -263,6 +268,7 @@
       elevation: yPoints[i],
       stage: stageLabels[i]
     }));
+
     // Ensure unique stations before returning; prefer L5/R5 over others
     function dedupeByStationKeepBanks(rows){
       const keyOf = (v)=> Number.isFinite(v) ? v.toFixed(3) : String(v);

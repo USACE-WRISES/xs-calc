@@ -618,9 +618,36 @@ function updateQModeUI(on){
 }
 
 /* ===================== HCS STATE ===================== */
+const freshLevees = () => ({ left:{enabled:false, station:null, crest:null}, right:{enabled:false, station:null, crest:null} });
 let ineffectiveAreas = [];
 let obstructions = [];
-let levees = { left: {enabled:false, station:null, crest:null}, right: {enabled:false, station:null, crest:null} };
+let levees = freshLevees();
+
+const cloneHcs = (value) => {
+  if (value == null) return value;
+  return JSON.parse(JSON.stringify(value));
+};
+
+function getHcsState(){
+  return {
+    ineffectiveAreas: cloneHcs(ineffectiveAreas) || [],
+    obstructions: cloneHcs(obstructions) || [],
+    levees: cloneHcs(levees) || freshLevees()
+  };
+}
+
+function setHcsState(hcs){
+  const src = hcs || {};
+  ineffectiveAreas = Array.isArray(src.ineffectiveAreas) ? cloneHcs(src.ineffectiveAreas) : [];
+  obstructions = Array.isArray(src.obstructions) ? cloneHcs(src.obstructions) : [];
+  levees = src.levees && typeof src.levees === 'object' ? cloneHcs(src.levees) : freshLevees();
+  renderIFATable();
+  renderObsTable();
+  renderLevTable();
+}
+
+window.getHcsState = getHcsState;
+window.setHcsState = setHcsState;
 
 function renderIFATable(){
   const tbody=document.querySelector('#ifaTable tbody');
@@ -2371,7 +2398,7 @@ function resetExample(){
   const hvn=document.getElementById('hvnToggle'); hvn.checked=false; updateHVnUI(false);
 
   ineffectiveAreas = []; obstructions = [];
-  levees = { left:{enabled:false, station:null, crest:null}, right:{enabled:false, station:null, crest:null} };
+  levees = freshLevees();
   renderIFATable(); renderObsTable(); renderLevTable();
 
   tableBody.innerHTML = '';
