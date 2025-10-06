@@ -493,7 +493,6 @@ function flashButton(btn){
   }, 160);
 }
 
-
 document.getElementById('insertRow').addEventListener('click',(e)=>{
   flashButton(e.currentTarget);
   if(selectedCells.size===0) return;
@@ -714,24 +713,40 @@ function renderLevTable(){
   });
 }
 
-/* Tabs */
-document.querySelectorAll('.tab').forEach(tab=>{
+/* Tabs (separate scopes) */
+// Settings tabs (Setup, HCS, Designer)
+document.querySelectorAll('.s-tab').forEach(tab=>{
   tab.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    // deactivate all settings tabs and panels
+    document.querySelectorAll('.s-tab').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.tabPanel').forEach(p=>p.classList.remove('active'));
+    // activate target
     tab.classList.add('active');
-    document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
+    const tgt = document.getElementById('tab-'+tab.dataset.tab);
+    if(tgt) tgt.classList.add('active');
+    // No preview state change here; Designer panel already manages preview
+    compute();
+  });
+});
 
-    // Remove Designer preview when leaving Designer tab
-    if (tab.dataset.tab !== 'designer') {
+// Cross‑Section tabs (XS Data, XS Designer) — (present only if such tabs exist in DOM)
+document.querySelectorAll('.xs-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    // deactivate all xs tabs and panels
+    document.querySelectorAll('.xs-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.xsTabPanel').forEach(p=>p.classList.remove('active'));
+    // activate target
+    tab.classList.add('active');
+    const tgtId = (tab.dataset.tab === 'xsdata') ? 'tab-xsdata' : 'tab-designer';
+    const tgt = document.getElementById(tgtId);
+    if(tgt) tgt.classList.add('active');
+    // Preview only when XS Designer is visible
+    if(tab.dataset.tab === 'designer'){
+      if(typeof window.refreshDesignPreview === 'function') window.refreshDesignPreview();
+    }else{
       window.__designPreview = null;
-      // Re-render to clear any preview graphics
-      compute();
-    } else {
-      // Recompute preview on entering Designer tab
-      refreshDesignPreview();
-      compute();
     }
+    compute();
   });
 });
 
@@ -958,7 +973,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
         if(bedRaw.length<2){ applyDesignerRowsToXsTable(rows); return; }
 
         const mL = params.advanced?.Tieout_L;
-      const mR = params.advanced?.Tieout_R;
+        const mR = params.advanced?.Tieout_R;
 
         const dLeft = design[0], dRight = design[design.length-1];
 
@@ -1082,8 +1097,6 @@ document.querySelectorAll('.tab').forEach(tab=>{
     }
   }
 
-
-
   function wireDesigner(){
     setDesignerEnableStates();
 
@@ -1125,8 +1138,6 @@ document.querySelectorAll('.tab').forEach(tab=>{
     // Initial preview (Designer tab may already be active)
     refreshDesignPreview();
   }
-
-
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireDesigner);
   else wireDesigner();
@@ -1224,12 +1235,6 @@ function compute(){
       distNote.style.display = 'flex';
       distNote.textContent = msg;
     }
-    document.getElementById('distTable').classList.add('disabled');
-  }
-
-  function greyOutDist(msg){
-    [distShade, distNote].forEach(el=>el.style.display='flex');
-    distNote.textContent=msg;
     document.getElementById('distTable').classList.add('disabled');
   }
 
@@ -1478,7 +1483,7 @@ function compute(){
 
     let chItems=[], K_C=0, A_C=mainGeom.A, P_C=0, R_C=0, n_c=null, AR23_C=0, denomCH=0;
     if(useComposite){
-      const pPieces=[]; for(const s of chSegs){ const geom=integrateSectionInRangeOnBed(convBed, stage, s.xL, s.xR); pPieces.push({n:s.n, P:geom.P}); }
+      const pPieces=[]; for(const s of chSegs){ const g=integrateSectionInRangeOnBed(convBed, stage, s.xL, s.xR); pPieces.push({n:s.n, P:g.P}); }
       P_C = pPieces.reduce((a,b)=>a+b.P,0);
       const top = pPieces.reduce((a,b)=>a + b.P*Math.pow(b.n,1.5), 0);
       n_c = (P_C>0)? Math.pow(top/P_C, 2/3) : uniqueNs[0] || NaN;
@@ -1799,21 +1804,21 @@ function renderPlot(pts, stage, wetIntervals = [], units, opts){
 
     // end caps (thick)
     const c1=document.createElementNS('http://www.w3.org/2000/svg','line');
-	c1.setAttribute('x1',xL); c1.setAttribute('y1',yN - cap/2);
-	c1.setAttribute('x2',xL); c1.setAttribute('y2',yN + cap/2);
+    c1.setAttribute('x1',xL); c1.setAttribute('y1',yN - cap/2);
+    c1.setAttribute('x2',xL); c1.setAttribute('y2',yN + cap/2);
     c1.setAttribute('stroke','#444');
     c1.setAttribute('stroke-width','2');                    
     svg.appendChild(c1);
 
     const c2=document.createElementNS('http://www.w3.org/2000/svg','line');
-	c2.setAttribute('x1',xR); c2.setAttribute('y1',yN - cap/2);
-	c2.setAttribute('x2',xR); c2.setAttribute('y2',yN + cap/2);
+    c2.setAttribute('x1',xR); c2.setAttribute('y1',yN - cap/2);
+    c2.setAttribute('x2',xR); c2.setAttribute('y2',yN + cap/2);
     c2.setAttribute('stroke','#444');
     c2.setAttribute('stroke-width','2');                    
     svg.appendChild(c2);
 
     // label
-	const label = (+val).toFixed(6).replace(/\.?0+$/, '').replace(/^0\./,'.');
+    const label = (+val).toFixed(6).replace(/\.?0+$/, '').replace(/^0\./,'.');
     const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
     txt.setAttribute('x',xMid); txt.setAttribute('y',yN);
     txt.setAttribute('text-anchor','middle'); txt.setAttribute('dominant-baseline','middle');
@@ -2284,7 +2289,7 @@ const nPickerMsg=document.getElementById('nPickerMsg');
 let nPickerState = { seg: 'chan', anchor: 'typ', choiceId: null, value: 0.035 };
 
 openNPicker.addEventListener('click', (e)=>{
-    flashButton(e.currentTarget);
+  flashButton(e.currentTarget);
   renderNCards(); syncNPickerFromInputs();
   nPickerModal.style.display='flex'; document.body.classList.add('modal-open');
   if(document.getElementById('hvnToggle').checked){
@@ -2711,7 +2716,6 @@ init();
   if(rbLeft)  rbLeft.addEventListener('click',  (e)=>{ flashButton(e.currentTarget); moveBank('RB', -1); });
   if(rbRight) rbRight.addEventListener('click', (e)=>{ flashButton(e.currentTarget); moveBank('RB', +1); });
 
-
   // Click on plot to set LB/RB to nearest station
   function viewboxXFromClient(evt){
     if(!_plotState || !_plotState.svg) return null;
@@ -2768,7 +2772,7 @@ init();
 })();
 
 /* ===== Notes =====
- - Designer preview and tie-outs use polylineBetween(), integrateSectionInRangeOnBed(), etc., from app.core.js. Keep that file loaded first. :contentReference[oaicite:3]{index=3}
- - The 19-point Designer geometry is produced by calculateCrossSection(params) from the Designer calculator. :contentReference[oaicite:4]{index=4}
- - This script assumes the same element IDs and overall layout provided in index.html. :contentReference[oaicite:5]{index=5}
+ - Designer preview and tie-outs use polylineBetween(), integrateSectionInRangeOnBed(), etc., from app.core.js. Keep that file loaded first.
+ - The 19-point Designer geometry is produced by calculateCrossSection(params) from the Designer calculator.
+ - This script assumes the same element IDs and overall layout provided in index.html.
 */

@@ -42,13 +42,37 @@
     .tab.active::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#0b57d0;border-radius:0;}
     .tabPanel{display:none;}
     .tabPanel.active{display:block;}
-    /* Inputs grid */
+
+    /* XS tabs (Cross-Section card) */
+    .xsTabPanel{display:none;}
+    .xsTabPanel.active{display:block;}
+
+    /* Inputs grid (used by Setup) */
     .controls{display:grid;grid-template-columns:repeat(5,minmax(180px,1fr));gap:12px;}
     label{display:grid;gap:6px;font-size:.92rem;color:var(--muted);}
     input,select,button{padding:10px;border:1px solid var(--border);border-radius:10px;font:inherit;background:#fff;}
     input,select{width:100%;}
     input:disabled, select:disabled { background:#f5f5f5; color:#888; }
     button:disabled{opacity:.45;cursor:not-allowed;}
+
+    /* NEW: Two‑column rows inside each Designer expander */
+    .form2col{
+      display:grid;
+      grid-template-columns: 1fr minmax(150px, 1fr);
+      gap:10px 14px;
+      align-items:center;
+    }
+    .form2col > label{
+      /* override the global label grid for these name cells */
+      display:block;
+      margin:0;
+      color:var(--muted);
+      font-size:.95rem;
+    }
+    @media (max-width: 640px){
+      .form2col{ grid-template-columns: 1fr; }
+    }
+
     /* Accordion + small checkbox */
     details.acc{border:1px solid #e7e7e7;border-radius:10px;padding:8px 10px;background:#fff}
     details.acc+details.acc{margin-top:10px}
@@ -57,9 +81,11 @@
     /* Accordion caret */
     details.acc>summary::before{content:'\25B8'; /* ▸ */ display:inline-block; margin-right:6px; transition:transform .12s ease}
     details.acc[open]>summary::before{transform:rotate(90deg)}
+
     /* Unit tags */
     .unit-len{color:#666}
     .chk-sm{transform:scale(0.95); transform-origin:left center}
+
     .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
     .designer-actions{gap:12px;margin-top:16px;align-items:center;}
     .applyGroup{display:flex;align-items:center;gap:12px;}
@@ -73,12 +99,14 @@
     .info::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:130%;width:290px;max-width:70vw;padding:8px 10px;border-radius:8px;background:rgba(20,20,20,.95);color:#fff;font-size:12px;line-height:1.35;box-shadow:0 6px 16px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:opacity .12s ease-out;z-index:1000}
     .info::before{content:'';position:absolute;left:50%;transform:translateX(-50%);bottom:122%;border:6px solid transparent;border-top-color:rgba(20,20,20,.95);opacity:0;transition:opacity .12s ease-out}
     .info:hover::after,.info:hover::before{opacity:1}
+
     /* Two-pane */
     .grid2{display:grid;grid-template-columns:420px 880px;gap:16px;align-items:start}
     .resultsCard{width:880px}
     @media(max-width:1200px){.grid2{grid-template-columns:1fr}.resultsCard{width:auto}}
     @media(max-width:900px){.controls{grid-template-columns:repeat(3,minmax(160px,1fr))}}
     @media(max-width:600px){.controls{grid-template-columns:repeat(1,minmax(160px,1fr))}}
+
     /* Results header + switch */
     .resultsHeader{display:flex;align-items:center;gap:12px;margin-bottom:8px}
     .plotSwitch{margin-left:auto;display:flex;align-items:center;gap:8px}
@@ -92,8 +120,9 @@
     .bankTools{display:flex;align-items:center;gap:14px}
     .bankGroup{display:flex;align-items:center;gap:6px}
     .btnTiny{padding:4px 8px;border-radius:999px;font-size:.9rem;line-height:1}
-    .bankToggle{padding:6px 12px;border-radius:999px;border:1px solid #cfcfcf;background:#fff;font-weight:600}
+    .bankToggle{padding:6px 12px;border:1px solid #cfcfcf;background:#fff;font-weight:600;border-radius:999px}
     .bankToggle.active{background:#e9f0ff;color:#0b3d91;border-color:#b9ccff}
+
     /* Tables */
     table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
     #xsTable:focus, #xsTable:focus-visible{outline:none; box-shadow:none}
@@ -114,15 +143,18 @@
     .cell-stage select{ text-align:left; text-align-last:left; }
     .cell-station input:focus,.cell-elev input:focus,.cell-n input:focus{cursor:text;caret-color:#000}
     .cell-selected{background:#e6f0ff!important;box-shadow:inset 0 0 0 2px #bfd3ff}
+
     /* HVn show/hide */
     #xsTable th.col-n, #xsTable td.cell-n { display:none; }
     body.hvn-on #xsTable th.col-n, body.hvn-on #xsTable td.cell-n { display:table-cell; }
     body.hvn-on #nLOB, body.hvn-on #nMC, body.hvn-on #nROB { opacity:.5 }
+
     /* Results + overlays */
     .resultsWrap{display:grid;gap:10px}
     .plotWrap,.summaryWrap,.convWrap,.distWrap{position:relative}
     .overlayShade{position:absolute;inset:0;background:rgba(128,128,128,.35);border-radius:10px;display:none;pointer-events:none}
     .overlayNote{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#111;font-weight:700;text-align:center;pointer-events:none;padding:0 12px}
+
     /* Plot */
     svg{width:100%;aspect-ratio:1000/360;height:auto;background:#fff;border:1px solid var(--border);border-radius:10px}
     .axis{stroke:#555;stroke-width:1.5;vector-effect:non-scaling-stroke}
@@ -139,6 +171,7 @@
     .secondary-tick{stroke-width:2;vector-effect:non-scaling-stroke}
     .secondary-label{font-size:16px}
     .slice-boundary{stroke:#777;stroke-width:1;stroke-dasharray:3 7;opacity:.55;vector-effect:non-scaling-stroke}
+
     .summary,.dist{width:100%;border-collapse:collapse;margin-top:4px;background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden}
     .dist{table-layout:fixed}
     .summary th,.summary td,.dist th,.dist td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:right}
@@ -149,6 +182,7 @@
     .summary{table-layout:auto}
     .summary th:first-child{min-width:220px;white-space:nowrap}
     .summary th:nth-child(2),.summary td:nth-child(2){min-width:130px;white-space:nowrap}
+
     .subhdr{display:flex;align-items:center;gap:8px;margin:12px 0 6px;}
     .subhdr h4{margin:0;font-weight:500;color:#222;}
     .btnAdd{padding:4px 10px;border-radius:999px;border:1px solid #cfcfcf;font-size:.9rem;}
@@ -169,6 +203,7 @@
     .tbl-lev colgroup col.c-en{width:16%;}
     .tbl-lev colgroup col.c-sta{width:33%;}
     .tbl-lev colgroup col.c-crest{width:33%;}
+
     .modalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:9999;overscroll-behavior:contain}
     .modal{width:min(980px,94vw);max-height:88vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.28);padding:16px;display:grid;gap:8px;overscroll-behavior:contain}
     .modal.modal-lg{width:min(1180px,96vw);max-height:90vh;}
@@ -178,6 +213,7 @@
     .btnSecondary{border-color:#cfcfcf}
     .btnPrimary{background:#0b57d0;color:#fff;border-color:#0b57d0}
     .btnLink{border:none;background:transparent;color:#0b57d0;text-decoration:underline;padding:6px 8px;border-radius:8px}
+
     .pickerHeader{display:flex;align-items:center;gap:8px}
     .pickerHeader .rightBtns{margin-left:auto}
     .chips{display:flex;justify-content:center;gap:8px;margin:6px 0 8px}
@@ -253,10 +289,11 @@
       <h2>Settings</h2>
       <button id="openHelp" class="helpBtn" title="About & equations">?</button>
     </div>
+
+    <!-- Settings Tabs: Setup & HCS (Designer removed per spec) -->
     <div class="tabs" role="tablist" aria-label="Settings Tabs">
-      <div class="tab active" data-tab="setup" role="tab" aria-selected="true" tabindex="0">Setup</div>
-      <div class="tab" data-tab="hcs" role="tab" aria-selected="false" tabindex="0">Hydraulic Controls &amp; Structures</div>
-      <div class="tab" data-tab="designer" role="tab" aria-selected="false" tabindex="0">Designer</div>
+      <div class="tab s-tab active" data-tab="setup" role="tab" aria-selected="true" tabindex="0">Setup</div>
+      <div class="tab s-tab" data-tab="hcs" role="tab" aria-selected="false" tabindex="0">Hydraulic Controls &amp; Structures</div>
     </div>
 
     <!-- Setup Panel -->
@@ -395,217 +432,227 @@
         </tbody>
       </table>
     </div>
-
-    <!-- Designer Panel -->
-    <div id="tab-designer" class="tabPanel">
-      <div class="controls" style="margin-bottom:8px;">
-        <!-- Removed Auto Apply from here per spec -->
-        <label>
-          Number of Stages
-          <select id="des-numStages">
-            <option value="1" selected>1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-          </select>
-        </label>
-      </div>
-
-      <details class="acc" open>
-        <summary>Stage 1 (Bankfull/Channel)</summary>
-        <div class="controls">
-          <label><span class="labelTitle">Width <span class="unit-len">(ft)</span></span>
-            <input id="des-s1-Width" type="number" step="any" value="20">
-          </label>
-          <label><span class="labelTitle">Depth <span class="unit-len">(ft)</span></span>
-            <input id="des-s1-Depth" type="number" step="any" value="2">
-          </label>
-          <label>Side Slope, m:1
-            <input id="des-s1-mbanks" type="number" step="any" value="2">
-          </label>
-          <label>Bed Slope, ybed
-            <input id="des-s1-ybed" type="number" step="any" value="0.5">
-          </label>
-          <label><span class="labelTitle">Thalweg Shift (+R/−L) <span class="unit-len">(ft)</span></span>
-            <input id="des-s1-thalweg_shift" type="number" step="any" value="0">
-          </label>
-<label>Roundness (0–1)
-            <input id="des-s1-Roundness" type="number" step="any" value="0">
-          </label>
-        </div>
-      </details>
-
-      <details class="acc">
-        <summary>Stage 2 (Benches)</summary>
-        <div class="controls">
-          <label><span class="labelTitle">ΔDepth <span class="unit-len">(ft)</span></span>
-            <input id="des-s2-D2stg" type="number" step="any" value="2">
-          </label>
-          <label>Side Slope, m:1
-            <input id="des-s2-Mbanks_2stg" type="number" step="any" value="2">
-          </label>
-          <label><span class="labelTitle">Bench L Width <span class="unit-len">(ft)</span></span>
-            <input id="des-s2-Wbench_L" type="number" step="any" value="10">
-          </label>
-          <label><span class="labelTitle">Bench R Width <span class="unit-len">(ft)</span></span>
-            <input id="des-s2-Wbench_R" type="number" step="any" value="10">
-          </label>
-          <label><span class="labelTitle">Bench L y <span class="unit-len">(ft)</span></span>
-            <input id="des-s2-Ybench_L" type="number" step="any" value="0.2">
-          </label>
-          <label><span class="labelTitle">Bench R y <span class="unit-len">(ft)</span></span>
-            <input id="des-s2-Ybench_R" type="number" step="any" value="0.2">
-          </label>
-</div>
-      </details>
-
-      <details class="acc">
-        <summary>Stage 3 (Floodplain)</summary>
-        <div class="controls">
-          <label><span class="labelTitle">ΔDepth <span class="unit-len">(ft)</span></span>
-            <input id="des-s3-D3stg" type="number" step="any" value="0.5">
-          </label>
-          <label>Side Slope, m:1
-            <input id="des-s3-Mbanks_3stg" type="number" step="any" value="2">
-          </label>
-          <label><span class="labelTitle">Stage 3 L Width <span class="unit-len">(ft)</span></span>
-            <input id="des-s3-W3rdstage_L" type="number" step="any" value="10">
-          </label>
-          <label><span class="labelTitle">Stage 3 R Width <span class="unit-len">(ft)</span></span>
-            <input id="des-s3-W3rdstage_R" type="number" step="any" value="10">
-          </label>
-          <label><span class="labelTitle">Stage 3 L y <span class="unit-len">(ft)</span></span>
-            <input id="des-s3-y3rdStage_L" type="number" step="any" value="0.2">
-          </label>
-          <label><span class="labelTitle">Stage 3 R y <span class="unit-len">(ft)</span></span>
-            <input id="des-s3-y3rdStage_R" type="number" step="any" value="0.2">
-          </label>
-</div>
-      </details>
-
-      <details class="acc">
-        <summary>Advanced</summary>
-        <div class="controls" style="margin-top:6px;">
-          <label>Left BKF H Mult
-            <input id="des-adv-Left_BKF_Height_Multiplier" type="number" step="any" value="1">
-          </label>
-          <label>Right BKF H Mult
-            <input id="des-adv-Right_BKF_Height_Multiplier" type="number" step="any" value="1">
-          </label>
-          <label>Left m@BKF Mult
-            <input id="des-adv-Left_Mbanks_BKF_Multiplier" type="number" step="any" value="1">
-          </label>
-          <label>Right m@BKF Mult
-            <input id="des-adv-Right_Mbanks_BKF_Multiplier" type="number" step="any" value="1">
-          </label>
-          <label>Left BKF bottom y Mult
-            <input id="des-adv-Left_BKF_Bottom_Slope_Multiplier" type="number" step="any" value="1">
-          </label>
-          <label>Right BKF bottom y Mult
-            <input id="des-adv-Right_BKF_Bottom_Slope_Multiplier" type="number" step="any" value="1">
-          </label>
-          <label><span class="labelTitle">X datum <span class="unit-len">(ft)</span></span>
-            <input id="des-adv-X_datum" type="number" step="any" value="0">
-          </label>
-          <label><span class="labelTitle">Y datum <span class="unit-len">(ft)</span></span>
-            <input id="des-adv-Y_datum" type="number" step="any" value="0">
-          </label>
-        
-          <label><span class="labelTitle">Tie‑out L <span>(L/L)</span></span>
-            <input id="des-adv-Tieout_L" type="number" step="any" value="3">
-          </label>
-          <label><span class="labelTitle">Tie‑out R <span>(L/L)</span></span>
-            <input id="des-adv-Tieout_R" type="number" step="any" value="3">
-          </label>
-</div>
-      </details>
-
-      <div class="actions designer-actions">
-        <div class="segSwitch" role="radiogroup" aria-label="Replace or Merge mode">
-          <input type="radio" id="mergeReplace" name="mergeMode" value="replace" checked>
-          <label for="mergeReplace">Replace current XS</label>
-          <input type="radio" id="mergeMerge" name="mergeMode" value="merge">
-          <label for="mergeMerge">Merge into XS</label>
-        </div>
-
-        <div class="applyGroup">
-          <label class="toggle">
-            <span>Automatically Apply</span>
-            <span class="switch">
-              <input id="designerAutoApply" type="checkbox">
-              <span class="slider" aria-hidden="true"></span>
-            </span>
-          </label>
-
-          <button id="designerApply" title="Apply design to XS">Apply</button>
-        </div>
-      </div>
-
-      <input type="hidden" id="des-mergeMode" value="replace">
-
-    </div>
   </div>
 
   <div class="grid2">
     <!-- CROSS‑SECTION -->
     <div class="card">
       <div class="cardHdr">
-        <h2>Cross‑Section Data</h2>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <!-- Copy (stroke-only, slightly larger) -->
-          <button id="btnCopyXS" class="btnSecondary iconBtn" title="Copy all to clipboard" aria-label="Copy to clipboard">
-            <svg viewBox="0 0 24 24" class="ico-stroke" role="img" aria-hidden="true">
-              <rect x="9" y="3" width="10" height="12" rx="2" ry="2"></rect>
-              <rect x="5" y="9" width="10" height="12" rx="2" ry="2"></rect>
-            </svg>
-          </button>
+        <h2>Cross‑Section</h2>
+        <!-- (Buttons moved into the XS Data tab per spec) -->
+      </div>
 
-          <!-- Paste (stroke-only, slightly larger; no fill) -->
-          <button id="btnPasteXS" class="btnSecondary iconBtn" title="Paste from clipboard" aria-label="Paste from clipboard">
-            <svg viewBox="0 0 24 24" class="ico-stroke" role="img" aria-hidden="true">
-              <rect x="6" y="4" width="12" height="16" rx="2" ry="2"></rect>
-              <rect x="9" y="2" width="6" height="4" rx="2" ry="2"></rect>
-              <path d="M12 9v6"></path>
-              <path d="M9 13l3 3 3-3"></path>
-            </svg>
-          </button>
+      <!-- XS tabs -->
+      <div class="tabs" role="tablist" aria-label="Cross‑Section Tabs">
+        <div class="tab xs-tab active" data-tab="xsdata" role="tab" aria-selected="true" tabindex="0">XS Data</div>
+        <div class="tab xs-tab" data-tab="designer" role="tab" aria-selected="false" tabindex="0">XS Designer</div>
+      </div>
 
-          <!-- Filter (stroke-only, slightly larger; no fill) -->
-          <button id="openFilter2" class="btnSecondary iconBtn" title="Filter cross-section points" aria-label="Filter points">
-            <svg viewBox="0 0 24 24" class="ico-stroke" role="img" aria-hidden="true">
-              <path d="M3 4h18l-7 9v5l-4 3v-8L3 4z"></path>
-            </svg>
-          </button>
+      <!-- XS DATA TAB -->
+      <div id="tab-xsdata" class="xsTabPanel active" aria-labelledby="XS Data">
+        <p class="small">
+          Stations increase left→right. Flow depth is from the lowest bed elevation (thalweg).
+          Mark exactly one <strong>LB</strong> and one <strong>RB</strong> row to split into
+          <em>Left Overbank</em>, <em>Main Channel</em>, and <em>Right Overbank</em>.
+        </p>
 
-          <!-- 3DEP button (unchanged) -->
-          <button id="open3DEP" class="btnSecondary" title="Import a USGS 3DEP profile">3DEP</button>
+        <!-- Buttons now live inside the XS Data tab -->
+        <div class="actions actions-xs" style="justify-content:space-between; align-items:center;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="insertRow">Insert Row</button>
+            <button id="deleteSelected" class="harmonize">Delete Selected</button>
+            <button id="sortBtn" class="harmonize" title="Sort stations ascending">Sort by Station</button>
+            <!-- Legacy Filter button kept in DOM but hidden via CSS -->
+            <button id="openFilter" class="btnSecondary" title="Filter cross‑section points">
+              <span class="ico-funnel" aria-hidden="true"></span>Filter
+            </button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <!-- Copy -->
+            <button id="btnCopyXS" class="btnSecondary iconBtn" title="Copy all to clipboard" aria-label="Copy to clipboard">
+              <svg viewBox="0 0 24 24" class="ico-stroke" role="img" aria-hidden="true">
+                <rect x="9" y="3" width="10" height="12" rx="2" ry="2"></rect>
+                <rect x="5" y="9" width="10" height="12" rx="2" ry="2"></rect>
+              </svg>
+            </button>
+            <!-- Paste -->
+            <button id="btnPasteXS" class="btnSecondary iconBtn" title="Paste from clipboard" aria-label="Paste from clipboard">
+              <svg viewBox="0 0 24 24" class="ico-stroke" role="img" aria-hidden="true">
+                <rect x="6" y="4" width="12" height="16" rx="2" ry="2"></rect>
+                <rect x="9" y="2" width="6" height="4" rx="2" ry="2"></rect>
+                <path d="M12 9v6"></path>
+                <path d="M9 13l3 3 3-3"></path>
+              </svg>
+            </button>
+            <!-- Filter (icon) -->
+            <button id="openFilter2" class="btnSecondary iconBtn" title="Filter cross-section points" aria-label="Filter points">
+              <svg viewBox="0 0 24 24" class="ico-stroke" role="img" aria-hidden="true">
+                <path d="M3 4h18l-7 9v5l-4 3v-8L3 4z"></path>
+              </svg>
+            </button>
+            <!-- 3DEP -->
+            <button id="open3DEP" class="btnSecondary" title="Import a USGS 3DEP profile">3DEP</button>
+          </div>
         </div>
+
+        <table id="xsTable" tabindex="-1">
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Station</th>
+            <th>Elevation</th>
+            <th>Stage</th>
+            <th class="col-n">n</th>
+          </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
-      <p class="small">
-        Stations increase left→right. Flow depth is from the lowest bed elevation (thalweg).
-        Mark exactly one <strong>LB</strong> and one <strong>RB</strong> row to split into
-        <em>Left Overbank</em>, <em>Main Channel</em>, and <em>Right Overbank</em>.
-      </p>
-      <div class="actions actions-xs">
-        <button id="insertRow">Insert Row</button>
-        <button id="deleteSelected" class="harmonize">Delete Selected</button>
-        <button id="sortBtn" class="harmonize" title="Sort stations ascending">Sort by Station</button>
-        <!-- Legacy Filter button kept in DOM but hidden via CSS -->
-        <button id="openFilter" class="btnSecondary" title="Filter cross‑section points">
-          <span class="ico-funnel" aria-hidden="true"></span>Filter
-        </button>
+
+      <!-- XS DESIGNER TAB -->
+      <div id="tab-designer" class="xsTabPanel" aria-labelledby="XS Designer">
+        <div class="controls" style="margin-bottom:8px;">
+          <label>
+            Number of Stages
+            <select id="des-numStages">
+              <option value="1" selected>1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- Stage 1 -->
+        <details class="acc" open>
+          <summary>Stage 1 (Bankfull/Channel)</summary>
+          <div class="form2col">
+            <label for="des-s1-Width">Width <span class="unit-len">(ft)</span></label>
+            <input id="des-s1-Width" type="number" step="any" value="20">
+
+            <label for="des-s1-Depth">Depth <span class="unit-len">(ft)</span></label>
+            <input id="des-s1-Depth" type="number" step="any" value="2">
+
+            <label for="des-s1-mbanks">Side Slope, m:1</label>
+            <input id="des-s1-mbanks" type="number" step="any" value="2">
+
+            <label for="des-s1-ybed">Bed Slope, ybed</label>
+            <input id="des-s1-ybed" type="number" step="any" value="0.5">
+
+            <label for="des-s1-thalweg_shift">Thalweg Shift (+R/−L) <span class="unit-len">(ft)</span></label>
+            <input id="des-s1-thalweg_shift" type="number" step="any" value="0">
+
+            <label for="des-s1-Roundness">Roundness (0–1)</label>
+            <input id="des-s1-Roundness" type="number" step="any" value="0">
+          </div>
+        </details>
+
+        <!-- Stage 2 -->
+        <details class="acc">
+          <summary>Stage 2 (Benches)</summary>
+          <div class="form2col">
+            <label for="des-s2-D2stg">ΔDepth <span class="unit-len">(ft)</span></label>
+            <input id="des-s2-D2stg" type="number" step="any" value="2">
+
+            <label for="des-s2-Mbanks_2stg">Side Slope, m:1</label>
+            <input id="des-s2-Mbanks_2stg" type="number" step="any" value="2">
+
+            <label for="des-s2-Wbench_L">Bench L Width <span class="unit-len">(ft)</span></label>
+            <input id="des-s2-Wbench_L" type="number" step="any" value="10">
+
+            <label for="des-s2-Wbench_R">Bench R Width <span class="unit-len">(ft)</span></label>
+            <input id="des-s2-Wbench_R" type="number" step="any" value="10">
+
+            <label for="des-s2-Ybench_L">Bench L y <span class="unit-len">(ft)</span></label>
+            <input id="des-s2-Ybench_L" type="number" step="any" value="0.2">
+
+            <label for="des-s2-Ybench_R">Bench R y <span class="unit-len">(ft)</span></label>
+            <input id="des-s2-Ybench_R" type="number" step="any" value="0.2">
+          </div>
+        </details>
+
+        <!-- Stage 3 -->
+        <details class="acc">
+          <summary>Stage 3 (Floodplain)</summary>
+          <div class="form2col">
+            <label for="des-s3-D3stg">ΔDepth <span class="unit-len">(ft)</span></label>
+            <input id="des-s3-D3stg" type="number" step="any" value="0.5">
+
+            <label for="des-s3-Mbanks_3stg">Side Slope, m:1</label>
+            <input id="des-s3-Mbanks_3stg" type="number" step="any" value="2">
+
+            <label for="des-s3-W3rdstage_L">Stage 3 L Width <span class="unit-len">(ft)</span></label>
+            <input id="des-s3-W3rdstage_L" type="number" step="any" value="10">
+
+            <label for="des-s3-W3rdstage_R">Stage 3 R Width <span class="unit-len">(ft)</span></label>
+            <input id="des-s3-W3rdstage_R" type="number" step="any" value="10">
+
+            <label for="des-s3-y3rdStage_L">Stage 3 L y <span class="unit-len">(ft)</span></label>
+            <input id="des-s3-y3rdStage_L" type="number" step="any" value="0.2">
+
+            <label for="des-s3-y3rdStage_R">Stage 3 R y <span class="unit-len">(ft)</span></label>
+            <input id="des-s3-y3rdStage_R" type="number" step="any" value="0.2">
+          </div>
+        </details>
+
+        <!-- Advanced -->
+        <details class="acc">
+          <summary>Advanced</summary>
+          <div class="form2col" style="margin-top:6px;">
+            <label for="des-adv-Left_BKF_Height_Multiplier">Left BKF H Mult</label>
+            <input id="des-adv-Left_BKF_Height_Multiplier" type="number" step="any" value="1">
+
+            <label for="des-adv-Right_BKF_Height_Multiplier">Right BKF H Mult</label>
+            <input id="des-adv-Right_BKF_Height_Multiplier" type="number" step="any" value="1">
+
+            <label for="des-adv-Left_Mbanks_BKF_Multiplier">Left m@BKF Mult</label>
+            <input id="des-adv-Left_Mbanks_BKF_Multiplier" type="number" step="any" value="1">
+
+            <label for="des-adv-Right_Mbanks_BKF_Multiplier">Right m@BKF Mult</label>
+            <input id="des-adv-Right_Mbanks_BKF_Multiplier" type="number" step="any" value="1">
+
+            <label for="des-adv-Left_BKF_Bottom_Slope_Multiplier">Left BKF bottom y Mult</label>
+            <input id="des-adv-Left_BKF_Bottom_Slope_Multiplier" type="number" step="any" value="1">
+
+            <label for="des-adv-Right_BKF_Bottom_Slope_Multiplier">Right BKF bottom y Mult</label>
+            <input id="des-adv-Right_BKF_Bottom_Slope_Multiplier" type="number" step="any" value="1">
+
+            <label for="des-adv-X_datum">X datum <span class="unit-len">(ft)</span></label>
+            <input id="des-adv-X_datum" type="number" step="any" value="0">
+
+            <label for="des-adv-Y_datum">Y datum <span class="unit-len">(ft)</span></label>
+            <input id="des-adv-Y_datum" type="number" step="any" value="0">
+
+            <label for="des-adv-Tieout_L">Tie‑out L <span>(L/L)</span></label>
+            <input id="des-adv-Tieout_L" type="number" step="any" value="3">
+
+            <label for="des-adv-Tieout_R">Tie‑out R <span>(L/L)</span></label>
+            <input id="des-adv-Tieout_R" type="number" step="any" value="3">
+          </div>
+        </details>
+
+        <div class="actions designer-actions">
+          <div class="segSwitch" role="radiogroup" aria-label="Replace or Merge mode">
+            <input type="radio" id="mergeReplace" name="mergeMode" value="replace" checked>
+            <label for="mergeReplace">Replace current XS</label>
+            <input type="radio" id="mergeMerge" name="mergeMode" value="merge">
+            <label for="mergeMerge">Merge into XS</label>
+          </div>
+
+          <div class="applyGroup">
+            <label class="toggle">
+              <span>Automatically Apply</span>
+              <span class="switch">
+                <input id="designerAutoApply" type="checkbox">
+                <span class="slider" aria-hidden="true"></span>
+              </span>
+            </label>
+
+            <button id="designerApply" title="Apply design to XS">Apply</button>
+          </div>
+        </div>
+
+        <input type="hidden" id="des-mergeMode" value="replace">
       </div>
-      <table id="xsTable" tabindex="-1">
-        <thead>
-        <tr>
-          <th>ID</th>
-          <th>Station</th>
-          <th>Elevation</th>
-          <th>Stage</th>
-          <th class="col-n">n</th>
-        </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
     </div>
 
     <!-- RESULTS -->
@@ -776,5 +823,3 @@
 
 </body>
 </html>
-
-
